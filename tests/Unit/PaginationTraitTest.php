@@ -1,0 +1,106 @@
+<?php
+
+declare(strict_types=1);
+
+namespace JG\LaravelAutomaticCrud\Tests\Unit;
+
+use JG\LaravelAutomaticCrud\Tests\TestCase;
+use JG\LaravelAutomaticCrud\Traits\ConfigTrait;
+use JG\LaravelAutomaticCrud\Traits\PaginationTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+
+final class PaginationTraitTest extends TestCase
+{
+    private object $controller;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->controller = new class
+        {
+            use ConfigTrait, PaginationTrait;
+
+            public function exposeDefaultIsPaginationEnabled(): bool
+            {
+                return $this->defaultIsPaginationEnabled();
+            }
+
+            public function exposeDefaultItemsPerPage(): int
+            {
+                return $this->defaultItemsPerPage();
+            }
+
+            public function exposeIsPaginationOverrideAllowed(): bool
+            {
+                return $this->isPaginationOverrideAllowed();
+            }
+
+            public function exposeIsPerPageOverrideAllowed(): bool
+            {
+                return $this->isPerPageOverrideAllowed();
+            }
+        };
+    }
+
+    #[Test]
+    #[DataProvider('defaultIsPaginationEnabledProvider')]
+    public function default_is_pagination_enabled(array $config, bool $expected): void
+    {
+        config($config);
+
+        $this->assertSame($expected, $this->controller->exposeDefaultIsPaginationEnabled());
+    }
+
+    public static function defaultIsPaginationEnabledProvider(): iterable
+    {
+        yield 'returns true by default' => [['automatic-crud' => null], true];
+        yield 'returns value from config' => [['automatic-crud.defaults.pagination.paginate' => false], false];
+    }
+
+    #[Test]
+    #[DataProvider('defaultItemsPerPageProvider')]
+    public function default_items_per_page(array $config, int $expected): void
+    {
+        config($config);
+
+        $this->assertSame($expected, $this->controller->exposeDefaultItemsPerPage());
+    }
+
+    public static function defaultItemsPerPageProvider(): iterable
+    {
+        yield 'returns 10 by default' => [['automatic-crud' => null], 10];
+        yield 'returns value from config' => [['automatic-crud.defaults.pagination.per_page' => 25], 25];
+    }
+
+    #[Test]
+    #[DataProvider('isPaginationOverrideAllowedProvider')]
+    public function is_pagination_override_allowed(array $config, bool $expected): void
+    {
+        config($config);
+
+        $this->assertSame($expected, $this->controller->exposeIsPaginationOverrideAllowed());
+    }
+
+    public static function isPaginationOverrideAllowedProvider(): iterable
+    {
+        yield 'returns true by default' => [['automatic-crud' => null], true];
+        yield 'returns value from config' => [['automatic-crud.defaults.pagination.allow_pagination_override' => false], false];
+    }
+
+    #[Test]
+    #[DataProvider('isPerPageOverrideAllowedProvider')]
+    public function is_per_page_override_allowed(array $config, bool $expected): void
+    {
+        config($config);
+
+        $this->assertSame($expected, $this->controller->exposeIsPerPageOverrideAllowed());
+    }
+
+    public static function isPerPageOverrideAllowedProvider(): iterable
+    {
+        yield 'returns true by default' => [['automatic-crud' => null], true];
+        yield 'returns value from config' => [['automatic-crud.defaults.pagination.allow_per_page_override' => false], false];
+    }
+}

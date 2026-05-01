@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  code-style:
+    name: Code Style
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+
+      - uses: ramsey/composer-install@v3
+
+      - run: ./vendor/bin/pint --test
+
+  tests:
+    name: Tests (Laravel ${{ matrix.laravel }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - laravel: 12
+            testbench: ^10.0
+            coverage: true
+          - laravel: 13
+            testbench: ^11.0
+            coverage: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_sqlite
+          coverage: ${{ matrix.coverage && 'pcov' || 'none' }}
+
+      - uses: ramsey/composer-install@v3
+
+      - run: composer update -W --with orchestra/testbench:${{ matrix.testbench }} --no-interaction --prefer-dist
+
+      - run: ./vendor/bin/phpunit ${{ matrix.coverage && '--coverage-clover coverage.xml' || '' }}
+
+      - uses: codecov/codecov-action@v5
+        if: matrix.coverage
+        with:
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
