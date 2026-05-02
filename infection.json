@@ -1,0 +1,31 @@
+{
+    "$schema": "https://raw.githubusercontent.com/infection/infection/master/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "testFramework": "phpunit",
+    "timeout": 10,
+    "minMsi": 95,
+    "minCoveredMsi": 95,
+    "logs": {
+        "text": "php://stderr",
+        "html": "infection.html"
+    },
+    "mutators": {
+        "@default": true,
+        "ProtectedVisibility": false,
+        "PublicVisibility": false,
+        "DecrementInteger": {
+            "ignore": [
+                "JG\\LaravelAutomaticCrud\\Traits\\PaginationTrait::paginateResults"
+            ]
+        },
+        "NullSafeMethodCall": {
+            "ignore": [
+                "JG\\LaravelAutomaticCrud\\Traits\\RequestTrait::applyRequest"
+            ]
+        }
+    }
+}
