@@ -1,8 +1,10 @@
-# laravel-automatic-crud
+# Laravel Automatic CRUD
 
 ![PHP](https://img.shields.io/badge/PHP-8.5+-777BB4?logo=php&logoColor=white)
 ![Laravel](https://img.shields.io/badge/Laravel-12%20|%2013-FF2D20?logo=laravel&logoColor=white)
-[![codecov](https://codecov.io/gh/jgrygierek/LaravelAutomaticCrud/graph/badge.svg?token=oRRUcAzeX3)](https://codecov.io/gh/jgrygierek/LaravelAutomaticCrud)
+[![Code Style](https://github.com/jgrygierek/LaravelAutomaticCrud/actions/workflows/code-style.yml/badge.svg)](https://github.com/jgrygierek/LaravelAutomaticCrud/actions/workflows/code-style.yml)
+[![Tests](https://github.com/jgrygierek/LaravelAutomaticCrud/actions/workflows/tests.yml/badge.svg)](https://github.com/jgrygierek/LaravelAutomaticCrud/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/jgrygierek/LaravelAutomaticCrud/branch/master/graph/badge.svg)](https://codecov.io/gh/jgrygierek/LaravelAutomaticCrud)
 
 Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
 

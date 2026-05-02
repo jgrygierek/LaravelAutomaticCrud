@@ -190,12 +190,10 @@ composer install
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request:
+GitHub Actions runs on every push and pull request via two separate workflows:
 
-- **Code Style** — `./vendor/bin/pint --test` (PHP 8.5)
-- **Tests** — `./vendor/bin/phpunit` against Laravel 12 and Laravel 13 matrix (PHP 8.5)
-
-All jobs run in parallel.
+- **Code Style** (`.github/workflows/code-style.yml`) — `./vendor/bin/pint --test` (PHP 8.5)
+- **Tests** (`.github/workflows/tests.yml`) — `./vendor/bin/phpunit` against Laravel 12 and Laravel 13 matrix (PHP 8.5)
 
 ## Additional Info
 
