@@ -260,6 +260,16 @@ final class IndexTest extends CrudTestCase
     }
 
     #[Test]
+    public function page_zero_is_clamped_to_first_page(): void
+    {
+        Item::factory()->count(15)->create();
+
+        $this->getJson('/items?page=0')
+            ->assertOk()
+            ->assertJsonPath('meta.current_page', 1);
+    }
+
+    #[Test]
     #[DataProvider('paginationOverrideDisabledProvider')]
     public function pagination_query_param_ignored_when_override_disabled(array $configOverrides, string $url): void
     {

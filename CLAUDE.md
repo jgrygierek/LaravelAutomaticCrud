@@ -152,6 +152,9 @@ composer update:l12
 
 # Switch to Laravel 13 testbench
 composer update:l13
+
+# Run mutation tests (requires pcov or xdebug)
+./vendor/bin/infection --threads=max
 ```
 
 ### With Laravel Sail (Docker)
@@ -181,6 +184,9 @@ composer install
 # Run Rector (dry-run)
 ./vendor/bin/sail php vendor/bin/rector --dry-run
 
+# Run mutation tests
+./vendor/bin/sail php vendor/bin/infection --threads=max
+
 # Open a shell in the container
 ./vendor/bin/sail shell
 
@@ -193,7 +199,7 @@ composer install
 GitHub Actions runs on every push and pull request via two separate workflows:
 
 - **Code Style** (`.github/workflows/code-style.yml`) — `./vendor/bin/pint --test` (PHP 8.5)
-- **Tests** (`.github/workflows/tests.yml`) — `./vendor/bin/phpunit` against Laravel 12 and Laravel 13 matrix (PHP 8.5)
+- **Tests** (`.github/workflows/tests.yml`) — `./vendor/bin/phpunit` against Laravel 12 and Laravel 13 matrix (PHP 8.5); mutation testing runs as a dependent job after both matrix jobs pass (Laravel 12, pcov)
 
 ## Additional Info
 

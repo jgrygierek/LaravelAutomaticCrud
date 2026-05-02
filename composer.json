@@ -20,15 +20,19 @@
         "laravel/framework": "^12.0|^13.0"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^2.3.0",
+        "infection/infection": "^0.32.7",
         "laravel/pint": "^1.29",
         "laravel/sail": "^1.57",
         "orchestra/testbench": "^10.11|^11.1",
         "phpunit/phpunit": "^12.5.23",
-        "rector/rector": "^2.4.2",
-        "driftingly/rector-laravel": "^2.3.0"
+        "rector/rector": "^2.4.2"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": true
+        }
     },
     "autoload": {
         "psr-4": {
@@ -51,6 +55,7 @@
         "rector": "./vendor/bin/rector",
         "rector:dry": "./vendor/bin/rector --dry-run",
         "update:l12": "composer update -W --with orchestra/testbench:^10.0",
-        "update:l13": "composer update -W --with orchestra/testbench:^11.0"
+        "update:l13": "composer update -W --with orchestra/testbench:^11.0",
+        "infection": "./vendor/bin/infection --threads=max"
     }
 }

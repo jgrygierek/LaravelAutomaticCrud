@@ -10,7 +10,6 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
 
 ## Table of Contents
 
-- [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
     - [Controllers](#controllers)
@@ -34,11 +33,6 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
 - [Development](#development)
     - [Without Docker](#without-docker)
     - [With Laravel Sail (Docker)](#with-laravel-sail-docker)
-
-## Requirements
-
-- PHP 8.5+
-- Laravel 12 or 13
 
 ## Installation
 
