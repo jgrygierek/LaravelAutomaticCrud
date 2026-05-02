@@ -1,0 +1,56 @@
+{
+    "name": "jg/laravel-automatic-crud",
+    "description": "Automatic CRUD controllers with configurable profiles for Laravel",
+    "type": "library",
+    "keywords": [
+        "Laravel",
+        "crud",
+        "controller",
+        "automatic"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jarosław Grygierek",
+            "email": "jaroslawgrygierek@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.5",
+        "laravel/framework": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.29",
+        "laravel/sail": "^1.57",
+        "orchestra/testbench": "^10.11|^11.1",
+        "phpunit/phpunit": "^12.5.23",
+        "rector/rector": "^2.4.2",
+        "driftingly/rector-laravel": "^2.3.0"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "JG\\LaravelAutomaticCrud\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "JG\\LaravelAutomaticCrud\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "./vendor/bin/phpunit",
+        "test:feature": "./vendor/bin/phpunit --testsuite Feature",
+        "test:unit": "./vendor/bin/phpunit --testsuite Unit",
+        "pint": "./vendor/bin/pint",
+        "pint:test": "./vendor/bin/pint --test",
+        "rector": "./vendor/bin/rector",
+        "rector:dry": "./vendor/bin/rector --dry-run",
+        "update:l12": "composer update -W --with orchestra/testbench:^10.0",
+        "update:l13": "composer update -W --with orchestra/testbench:^11.0"
+    }
+}

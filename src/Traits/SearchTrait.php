@@ -1,0 +1,67 @@
+<?php
+
+declare(strict_types=1);
+
+namespace JG\LaravelAutomaticCrud\Traits;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Pipeline;
+use JG\LaravelAutomaticCrud\Http\Interfaces\SearchableInterface;
+
+trait SearchTrait
+{
+    abstract protected function getModelClass(): string;
+
+    protected function buildQuery(Request $request): Builder
+    {
+        $modelClass = $this->getModelClass();
+        $query = $modelClass::query();
+
+        if ($this->canAddSearchFilters($modelClass)) {
+            $query = $this->pipelineSearch($query, new $modelClass());
+        }
+
+        return $this->applySorting($this->modifyQuery($query), $request);
+    }
+
+    protected function modifyQuery(Builder $query): Builder
+    {
+        return $query;
+    }
+
+    protected function pipelineSearch(Builder $query, SearchableInterface $object): Builder
+    {
+        return app(Pipeline::class)
+            ->send($query)
+            ->through($object->searchFilters())
+            ->thenReturn();
+    }
+
+    private function canAddSearchFilters(string $modelClass): bool
+    {
+        return is_a($modelClass, SearchableInterface::class, true);
+    }
+
+    private function canAddSorting(Builder $query, Request $request): bool
+    {
+        return !$this->isAlreadySorted($query) && $request->filled('sort_by');
+    }
+
+    private function applySorting(Builder $query, Request $request): Builder
+    {
+        if ($this->canAddSorting($query, $request)) {
+            $query->orderBy(
+                $request->input('sort_by', 'id'),
+                $request->input('sort_direction', 'asc'),
+            );
+        }
+
+        return $query;
+    }
+
+    private function isAlreadySorted(Builder $query): bool
+    {
+        return !empty($query->getQuery()->orders);
+    }
+}
