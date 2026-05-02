@@ -1,0 +1,21 @@
+name: Code Style
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  code-style:
+    name: Code Style
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+
+      - uses: ramsey/composer-install@v3
+
+      - run: ./vendor/bin/pint --test
