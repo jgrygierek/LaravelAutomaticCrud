@@ -326,24 +326,24 @@ class ItemController extends CrudableController
 ```php
 // config/automatic-crud.php
 return [
-    'defaults' => [
-        'namespaces' => [
-            'model'    => 'App\Models',
-            'resource' => 'App\Http\Resources',
-            'request'  => 'App\Http\Requests',
+    'configs' => [
+        'default' => [
+            'namespaces' => [
+                'model'    => 'App\Models',
+                'resource' => 'App\Http\Resources',
+                'request'  => 'App\Http\Requests',
+            ],
+            'pagination' => [
+                'paginate'                  => true,
+                'per_page'                  => 10,
+                'allow_pagination_override' => true,
+                'allow_per_page_override'   => true,
+            ],
+            'requests' => [
+                'force_custom'   => false,
+                'only_validated' => false,
+            ],
         ],
-        'pagination' => [
-            'paginate'                  => true,
-            'per_page'                  => 10,
-            'allow_pagination_override' => true,
-            'allow_per_page_override'   => true,
-        ],
-        'requests' => [
-            'force_custom'   => false,
-            'only_validated' => false,
-        ],
-    ],
-    'custom_configs' => [
         'api' => [
             'pagination' => [
                 'per_page'                  => 25,
@@ -356,16 +356,16 @@ return [
 
 ### Custom configurations
 
-A controller can select a named custom configuration to override default values:
+A controller can select a named configuration to override default values:
 
 ```php
 class ItemController extends CrudableController
 {
-    protected string $customConfig = 'api';
+    protected string $configName = 'api';
 }
 ```
 
-Config resolution order: custom configuration value → default value → hardcoded fallback.
+Config resolution order: named configuration value → `default` configuration value → hardcoded fallback.
 
 ## Development
 

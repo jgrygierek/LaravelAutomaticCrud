@@ -20,7 +20,7 @@ final class ResourceNamespaceTest extends CrudTestCase
     #[Test]
     public function resource_namespace_method_overrides_config(): void
     {
-        config(['automatic-crud.defaults.namespaces.resource' => 'Wrong\Resources']);
+        config(['automatic-crud.configs.default.namespaces.resource' => 'Wrong\Resources']);
 
         $item = Item::factory()->create();
 

@@ -23,7 +23,7 @@ final class ModelNamespaceTest extends CrudTestCase
     #[Test]
     public function model_namespace_method_overrides_config_for_index(): void
     {
-        config(['automatic-crud.defaults.namespaces.model' => 'Wrong\Models']);
+        config(['automatic-crud.configs.default.namespaces.model' => 'Wrong\Models']);
 
         Item::factory()->count(2)->create();
 
@@ -35,7 +35,7 @@ final class ModelNamespaceTest extends CrudTestCase
     #[Test]
     public function model_namespace_method_overrides_config_for_store(): void
     {
-        config(['automatic-crud.defaults.namespaces.model' => 'Wrong\Models']);
+        config(['automatic-crud.configs.default.namespaces.model' => 'Wrong\Models']);
 
         $this->postJson('/model-ns/items', ['name' => 'New Item'])
             ->assertCreated();
@@ -46,7 +46,7 @@ final class ModelNamespaceTest extends CrudTestCase
     #[Test]
     public function model_namespace_method_overrides_config_for_show(): void
     {
-        config(['automatic-crud.defaults.namespaces.model' => 'Wrong\Models']);
+        config(['automatic-crud.configs.default.namespaces.model' => 'Wrong\Models']);
 
         $item = Item::factory()->create();
 
@@ -58,7 +58,7 @@ final class ModelNamespaceTest extends CrudTestCase
     #[Test]
     public function model_namespace_method_overrides_config_for_update(): void
     {
-        config(['automatic-crud.defaults.namespaces.model' => 'Wrong\Models']);
+        config(['automatic-crud.configs.default.namespaces.model' => 'Wrong\Models']);
 
         $item = Item::factory()->create(['name' => 'Old']);
 
@@ -71,7 +71,7 @@ final class ModelNamespaceTest extends CrudTestCase
     #[Test]
     public function model_namespace_method_overrides_config_for_destroy(): void
     {
-        config(['automatic-crud.defaults.namespaces.model' => 'Wrong\Models']);
+        config(['automatic-crud.configs.default.namespaces.model' => 'Wrong\Models']);
 
         $item = Item::factory()->create();
 

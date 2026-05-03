@@ -39,8 +39,8 @@ final class StoreTest extends CrudTestCase
     #[Test]
     public function ignores_fields_not_present_in_form_request_rules_when_only_validated_is_enabled(): void
     {
-        config()->set('automatic-crud.defaults.requests.only_validated', true);
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
+        config()->set('automatic-crud.configs.default.requests.only_validated', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
 
         $this->sendRequest(['name' => 'New Item', 'secret' => 'sensitive'])->assertCreated();
 

@@ -19,8 +19,8 @@ final class RequestNamespaceTest extends CrudTestCase
     public function request_namespace_method_overrides_config(): void
     {
         config([
-            'automatic-crud.defaults.namespaces.request' => 'Wrong\Requests',
-            'automatic-crud.defaults.requests.force_custom' => true,
+            'automatic-crud.configs.default.namespaces.request' => 'Wrong\Requests',
+            'automatic-crud.configs.default.requests.force_custom' => true,
         ]);
 
         $this->postJson('/request-ns/items', ['name' => 'Valid Item'])
@@ -33,8 +33,8 @@ final class RequestNamespaceTest extends CrudTestCase
     public function request_namespace_method_overrides_config_validation(): void
     {
         config([
-            'automatic-crud.defaults.namespaces.request' => 'Wrong\Requests',
-            'automatic-crud.defaults.requests.force_custom' => true,
+            'automatic-crud.configs.default.namespaces.request' => 'Wrong\Requests',
+            'automatic-crud.configs.default.requests.force_custom' => true,
         ]);
 
         $this->postJson('/request-ns/items', [])

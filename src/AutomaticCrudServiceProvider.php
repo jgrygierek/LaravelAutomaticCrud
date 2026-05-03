@@ -28,13 +28,11 @@ class AutomaticCrudServiceProvider extends ServiceProvider
 
     private function validateConfig(): void
     {
-        $defaults = config('automatic-crud.defaults', []);
+        $defaultConfig = config('automatic-crud.configs.default', []);
 
-        $this->assertOnlyValidatedRequestsConfig($defaults, 'defaults');
-
-        foreach (array_keys(config('automatic-crud.custom_configs', [])) as $customConfig) {
-            $merged = array_replace_recursive($defaults, config("automatic-crud.custom_configs.$customConfig", []));
-            $this->assertOnlyValidatedRequestsConfig((array) $merged, "custom_configs.$customConfig");
+        foreach (config('automatic-crud.configs', []) as $configName => $config) {
+            $merged = array_replace_recursive($defaultConfig, (array) $config);
+            $this->assertOnlyValidatedRequestsConfig($merged, "configs.$configName");
         }
     }
 
