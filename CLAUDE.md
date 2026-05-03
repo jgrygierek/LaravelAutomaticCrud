@@ -43,8 +43,8 @@ Abstract base controller providing `index`, `store`, `show`, `update`, `destroy`
 - `modifyQuery(Builder $query): Builder` — customize the query before pagination
 - `defaultIsPaginationEnabled(): bool` — override pagination on/off (defaults to config value)
 - `defaultItemsPerPage(): int` — override per-page count (defaults to config value)
-- `isPaginationOverrideAllowed(): bool` — whether `?pagination=` query param is respected (defaults to config value)
-- `isPerPageOverrideAllowed(): bool` — whether `?per_page=` query param is respected (defaults to config value)
+- `isPaginationOverrideAllowedInQuery(): bool` — whether `?pagination=` query param is respected (defaults to config value)
+- `isPerPageOverrideAllowedInQuery(): bool` — whether `?per_page=` query param is respected (defaults to config value)
 
 Resources and form requests are resolved by convention, but resource classes can also be overridden via `getResourceClass()` / `getResourceCollectionClass()`:
 
@@ -75,6 +75,8 @@ Sorting is skipped when the query already has an `orderBy` clause (e.g., applied
 ### Searchable Interface
 
 Models implementing `SearchableInterface` must define `searchFilters(): array` returning filter pipeline classes. These are applied automatically in `index`.
+
+`searchFilters()` can return either a flat array of filter classes or a keyed array where each key is a config name. When keyed, the controller's `$configName` selects the matching set; falls back to `default`, then `[]`.
 
 ## Tests
 

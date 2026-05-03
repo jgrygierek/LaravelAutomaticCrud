@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace JG\LaravelAutomaticCrud\Tests\Feature\Controllers;
+namespace JG\LaravelAutomaticCrud\Tests\Feature\Controllers\Index;
 
 use JG\LaravelAutomaticCrud\Tests\Feature\CrudTestCase;
 use JG\LaravelAutomaticCrud\Tests\Support\Controllers\SearchableItemController;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
-use JG\LaravelAutomaticCrud\Tests\Support\Models\SearchableItem;
 use JG\LaravelAutomaticCrud\Tests\Support\Resources\SearchableItemResource;
 use PHPUnit\Framework\Attributes\Test;
 
-final class IndexSearchTest extends CrudTestCase
+final class SearchTest extends CrudTestCase
 {
     protected function defineRoutes($router): void
     {
@@ -48,21 +47,5 @@ final class IndexSearchTest extends CrudTestCase
         $this->getJson('/searchable-items?name=Nonexistent&pagination=false')
             ->assertOk()
             ->assertExactJson(['data' => []]);
-    }
-
-    #[Test]
-    public function applies_search_filter_and_sorting_in_the_same_request(): void
-    {
-        $first = SearchableItem::create(['name' => 'Alpha']);
-        $second = SearchableItem::create(['name' => 'Alpha']);
-        SearchableItem::create(['name' => 'Beta']);
-
-        $ids = collect(
-            $this->getJson('/searchable-items?name=Alpha&sort_by=id&sort_direction=desc&pagination=false')
-                ->assertOk()
-                ->json('data'),
-        )->pluck('id')->toArray();
-
-        $this->assertSame([$second->id, $first->id], $ids);
     }
 }

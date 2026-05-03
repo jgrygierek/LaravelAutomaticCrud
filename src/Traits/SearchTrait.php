@@ -11,6 +11,8 @@ use JG\LaravelAutomaticCrud\Http\Interfaces\SearchableInterface;
 
 trait SearchTrait
 {
+    protected string $configName = 'default';
+
     abstract protected function getModelClass(): string;
 
     protected function buildQuery(Request $request): Builder
@@ -34,8 +36,19 @@ trait SearchTrait
     {
         return app(Pipeline::class)
             ->send($query)
-            ->through($object->searchFilters())
+            ->through($this->resolveSearchFilters($object))
             ->thenReturn();
+    }
+
+    private function resolveSearchFilters(SearchableInterface $object): array
+    {
+        $filters = $object->searchFilters();
+
+        if (empty($filters) || !is_array(reset($filters))) {
+            return $filters;
+        }
+
+        return $filters[$this->configName] ?? $filters['default'] ?? [];
     }
 
     private function canAddSearchFilters(string $modelClass): bool

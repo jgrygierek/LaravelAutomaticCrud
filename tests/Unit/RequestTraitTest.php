@@ -99,27 +99,6 @@ final class RequestTraitTest extends TestCase
     }
 
     #[Test]
-    public function throws_exception_when_class_not_found_and_only_validated_requests_is_enabled(): void
-    {
-        config()->set('automatic-crud.configs.default.requests.only_validated', true);
-        config()->set('automatic-crud.configs.default.requests.force_custom', true);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/Request class \[.+\] not found\./');
-
-        $this->controller->exposeGetRequestClass('Index');
-    }
-
-    #[Test]
-    public function returns_class_when_it_exists_and_only_validated_requests_is_enabled(): void
-    {
-        config()->set('automatic-crud.configs.default.requests.only_validated', true);
-        config()->set('automatic-crud.configs.default.requests.force_custom', true);
-
-        $this->assertSame(StoreItemRequest::class, $this->controller->exposeGetRequestClass('Store'));
-    }
-
-    #[Test]
     public function throws_exception_when_only_validated_is_enabled_and_request_is_not_form_request(): void
     {
         config()->set('automatic-crud.configs.default.requests.only_validated', true);

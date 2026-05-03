@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JG\LaravelAutomaticCrud\Tests\Feature\Controllers;
+namespace JG\LaravelAutomaticCrud\Tests\Feature\Controllers\Index;
 
 use JG\LaravelAutomaticCrud\Tests\Feature\CrudTestCase;
 use JG\LaravelAutomaticCrud\Tests\Support\Controllers\ModifyQueryController;

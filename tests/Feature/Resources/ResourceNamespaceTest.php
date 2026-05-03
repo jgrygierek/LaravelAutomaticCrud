@@ -15,10 +15,11 @@ final class ResourceNamespaceTest extends CrudTestCase
     protected function defineRoutes($router): void
     {
         $router->get('/resource-ns/items', [ResourceNamespaceItemController::class, 'index']);
+        $router->get('/resource-ns/items/{id}', [ResourceNamespaceItemController::class, 'show']);
     }
 
     #[Test]
-    public function resource_namespace_method_overrides_config(): void
+    public function resource_namespace_method_overrides_config_for_index(): void
     {
         config(['automatic-crud.configs.default.namespaces.resource' => 'Wrong\Resources']);
 
@@ -27,5 +28,17 @@ final class ResourceNamespaceTest extends CrudTestCase
         $this->getJson('/resource-ns/items')
             ->assertOk()
             ->assertJsonPath('data.0', (new ItemResource($item))->resolve());
+    }
+
+    #[Test]
+    public function resource_namespace_method_overrides_config_for_show(): void
+    {
+        config(['automatic-crud.configs.default.namespaces.resource' => 'Wrong\Resources']);
+
+        $item = Item::factory()->create();
+
+        $this->getJson('/resource-ns/items/' . $item->id)
+            ->assertOk()
+            ->assertExactJson(['data' => (new ItemResource($item))->resolve()]);
     }
 }

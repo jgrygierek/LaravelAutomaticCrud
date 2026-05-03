@@ -73,9 +73,9 @@ final class ServiceProviderTest extends TestCase
 
         config(['automatic-crud.configs.default' => ['requests' => ['force_custom' => false]]]);
 
-        $provider->boot();
+        $this->expectNotToPerformAssertions();
 
-        $this->assertTrue(true);
+        $provider->boot();
     }
 
     #[Test]
@@ -106,9 +106,9 @@ final class ServiceProviderTest extends TestCase
         config()->set('automatic-crud.configs.default.requests.only_validated', true);
         config()->set('automatic-crud.configs.default.requests.force_custom', true);
 
-        $provider->boot();
+        $this->expectNotToPerformAssertions();
 
-        $this->assertTrue(true);
+        $provider->boot();
     }
 
     #[Test]
@@ -120,8 +120,8 @@ final class ServiceProviderTest extends TestCase
         config()->set('automatic-crud.configs.default.requests.force_custom', true);
         config()->set('automatic-crud.configs.strict', ['requests' => ['only_validated' => true]]);
 
-        $provider->boot();
+        $this->expectNotToPerformAssertions();
 
-        $this->assertTrue(true);
+        $provider->boot();
     }
 }
