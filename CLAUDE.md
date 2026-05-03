@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - PHP 8.5
 - Dependencies managed via Composer
-- Tests run with PHPUnit 12 + Orchestra Testbench (SQLite in-memory)
+- Tests run with PHPUnit 13 + Orchestra Testbench (SQLite in-memory)
 - Supports Laravel 12 and 13
 - Development can be run directly via `vendor/bin/` or inside Docker using Laravel Sail
 

@@ -10,6 +10,7 @@ use JG\LaravelAutomaticCrud\Tests\Support\Filters\IdFilter;
 use JG\LaravelAutomaticCrud\Tests\Support\Filters\NameFilter;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\SearchableItem;
+use JG\LaravelAutomaticCrud\Tests\Support\Models\SearchableItemWithConfigFilters;
 use JG\LaravelAutomaticCrud\Tests\Support\SearchTraitController;
 use JG\LaravelAutomaticCrud\Tests\TestCase;
 use JG\LaravelAutomaticCrud\Traits\SearchTrait;
@@ -123,4 +124,42 @@ final class SearchTraitTest extends TestCase
         $this->assertSame('id', $orders[0]['column']);
     }
 
+    #[Test]
+    public function build_query_applies_default_config_filters_for_keyed_searchable_model(): void
+    {
+        request()->merge(['name' => 'Alpha']);
+
+        $controller = new SearchTraitController(SearchableItemWithConfigFilters::class, 'default');
+        $wheres = $controller->exposeBuildQuery()->getQuery()->wheres;
+
+        $this->assertNotNull($wheres);
+        $this->assertSame('name', $wheres[0]['column']);
+        $this->assertSame('Alpha', $wheres[0]['value']);
+    }
+
+    #[Test]
+    public function build_query_applies_custom_config_filters_for_keyed_searchable_model(): void
+    {
+        request()->merge(['id' => '1']);
+
+        $controller = new SearchTraitController(SearchableItemWithConfigFilters::class, 'custom');
+        $wheres = $controller->exposeBuildQuery()->getQuery()->wheres;
+
+        $this->assertNotNull($wheres);
+        $this->assertSame('id', $wheres[0]['column']);
+        $this->assertSame('1', $wheres[0]['value']);
+    }
+
+    #[Test]
+    public function build_query_falls_back_to_default_filters_when_config_not_found(): void
+    {
+        request()->merge(['name' => 'Alpha']);
+
+        $controller = new SearchTraitController(SearchableItemWithConfigFilters::class, 'nonexistent');
+        $wheres = $controller->exposeBuildQuery()->getQuery()->wheres;
+
+        $this->assertNotNull($wheres);
+        $this->assertSame('name', $wheres[0]['column']);
+        $this->assertSame('Alpha', $wheres[0]['value']);
+    }
 }
