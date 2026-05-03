@@ -22,12 +22,12 @@ trait PaginationTrait
         return (int) $this->getConfig('pagination.per_page');
     }
 
-    protected function isPaginationOverrideAllowed(): bool
+    protected function isPaginationOverrideAllowedInQuery(): bool
     {
         return (bool) $this->getConfig('pagination.allow_pagination_override');
     }
 
-    protected function isPerPageOverrideAllowed(): bool
+    protected function isPerPageOverrideAllowedInQuery(): bool
     {
         return (bool) $this->getConfig('pagination.allow_per_page_override');
     }
@@ -51,14 +51,14 @@ trait PaginationTrait
 
     private function canPaginateResults(): bool
     {
-        return $this->isPaginationOverrideAllowed() && request()->has('pagination')
+        return $this->isPaginationOverrideAllowedInQuery() && request()->has('pagination')
             ? filter_var(request()->input('pagination'), FILTER_VALIDATE_BOOLEAN)
             : $this->defaultIsPaginationEnabled();
     }
 
     private function getPerPage(): int
     {
-        $perPage = $this->isPerPageOverrideAllowed() && request()->filled('per_page')
+        $perPage = $this->isPerPageOverrideAllowedInQuery() && request()->filled('per_page')
             ? (int) request()->input('per_page')
             : $this->defaultItemsPerPage();
 

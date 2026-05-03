@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JG\LaravelAutomaticCrud\Tests\Support\Controllers;
+namespace JG\LaravelAutomaticCrud\Tests\Support\Controllers\Pagination;
 
 use JG\LaravelAutomaticCrud\Http\Controllers\CrudableController;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;

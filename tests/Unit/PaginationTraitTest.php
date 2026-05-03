@@ -32,14 +32,14 @@ final class PaginationTraitTest extends TestCase
                 return $this->defaultItemsPerPage();
             }
 
-            public function exposeIsPaginationOverrideAllowed(): bool
+            public function exposeisPaginationOverrideAllowedInQuery(): bool
             {
-                return $this->isPaginationOverrideAllowed();
+                return $this->isPaginationOverrideAllowedInQuery();
             }
 
-            public function exposeIsPerPageOverrideAllowed(): bool
+            public function exposeisPerPageOverrideAllowedInQuery(): bool
             {
-                return $this->isPerPageOverrideAllowed();
+                return $this->isPerPageOverrideAllowedInQuery();
             }
         };
     }
@@ -75,30 +75,30 @@ final class PaginationTraitTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('isPaginationOverrideAllowedProvider')]
+    #[DataProvider('isPaginationOverrideAllowedInQueryProvider')]
     public function is_pagination_override_allowed(array $config, bool $expected): void
     {
         config($config);
 
-        $this->assertSame($expected, $this->controller->exposeIsPaginationOverrideAllowed());
+        $this->assertSame($expected, $this->controller->exposeisPaginationOverrideAllowedInQuery());
     }
 
-    public static function isPaginationOverrideAllowedProvider(): iterable
+    public static function isPaginationOverrideAllowedInQueryProvider(): iterable
     {
         yield 'returns true by default' => [['automatic-crud' => null], true];
         yield 'returns value from config' => [['automatic-crud.configs.default.pagination.allow_pagination_override' => false], false];
     }
 
     #[Test]
-    #[DataProvider('isPerPageOverrideAllowedProvider')]
+    #[DataProvider('isPerPageOverrideAllowedInQueryProvider')]
     public function is_per_page_override_allowed(array $config, bool $expected): void
     {
         config($config);
 
-        $this->assertSame($expected, $this->controller->exposeIsPerPageOverrideAllowed());
+        $this->assertSame($expected, $this->controller->exposeisPerPageOverrideAllowedInQuery());
     }
 
-    public static function isPerPageOverrideAllowedProvider(): iterable
+    public static function isPerPageOverrideAllowedInQueryProvider(): iterable
     {
         yield 'returns true by default' => [['automatic-crud' => null], true];
         yield 'returns value from config' => [['automatic-crud.configs.default.pagination.allow_per_page_override' => false], false];

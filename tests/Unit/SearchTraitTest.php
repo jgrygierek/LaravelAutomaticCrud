@@ -6,8 +6,11 @@ namespace JG\LaravelAutomaticCrud\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use JG\LaravelAutomaticCrud\Tests\Support\Filters\IdFilter;
+use JG\LaravelAutomaticCrud\Tests\Support\Filters\NameFilter;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\SearchableItem;
+use JG\LaravelAutomaticCrud\Tests\Support\SearchTraitController;
 use JG\LaravelAutomaticCrud\Tests\TestCase;
 use JG\LaravelAutomaticCrud\Traits\SearchTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -21,7 +24,7 @@ final class SearchTraitTest extends TestCase
         request()->merge(['name' => 'Alpha']);
 
         $model = new class extends Model {};
-        $controller = $this->makeController(get_class($model));
+        $controller = new SearchTraitController(get_class($model));
 
         $this->assertEmpty($controller->exposeBuildQuery()->getQuery()->wheres);
     }
@@ -31,7 +34,7 @@ final class SearchTraitTest extends TestCase
     {
         request()->merge(['name' => 'Alpha']);
 
-        $controller = $this->makeController(SearchableItem::class);
+        $controller = new SearchTraitController(SearchableItem::class);
         $wheres = $controller->exposeBuildQuery()->getQuery()->wheres;
 
         $this->assertNotNull($wheres);
@@ -40,9 +43,30 @@ final class SearchTraitTest extends TestCase
     }
 
     #[Test]
+    public function build_query_applies_all_filters_when_flat_array_has_multiple_filters(): void
+    {
+        request()->merge(['name' => 'Alpha', 'id' => '1']);
+
+        $model = new class extends SearchableItem
+        {
+            public function searchFilters(): array
+            {
+                return [NameFilter::class, IdFilter::class];
+            }
+        };
+
+        $controller = new SearchTraitController(get_class($model));
+        $wheres = $controller->exposeBuildQuery()->getQuery()->wheres;
+
+        $this->assertCount(2, $wheres);
+        $this->assertSame('name', $wheres[0]['column']);
+        $this->assertSame('id', $wheres[1]['column']);
+    }
+
+    #[Test]
     public function build_query_skips_sorting_when_no_sort_by_param(): void
     {
-        $controller = $this->makeController(Item::class);
+        $controller = new SearchTraitController(Item::class);
 
         $this->assertNull($controller->exposeBuildQuery()->getQuery()->orders);
     }
@@ -53,7 +77,7 @@ final class SearchTraitTest extends TestCase
     {
         request()->merge($params);
 
-        $controller = $this->makeController(Item::class);
+        $controller = new SearchTraitController(Item::class);
         $orders = $controller->exposeBuildQuery()->getQuery()->orders;
 
         $this->assertCount(1, $orders);
@@ -99,23 +123,4 @@ final class SearchTraitTest extends TestCase
         $this->assertSame('id', $orders[0]['column']);
     }
 
-    private function makeController(string $modelClass): object
-    {
-        return new class($modelClass)
-        {
-            use SearchTrait;
-
-            public function __construct(private readonly string $model) {}
-
-            public function getModelClass(): string
-            {
-                return $this->model;
-            }
-
-            public function exposeBuildQuery(): Builder
-            {
-                return $this->buildQuery(request());
-            }
-        };
-    }
 }

@@ -136,12 +136,12 @@ class ItemController extends CrudableController
         return 25;
     }
 
-    protected function isPaginationOverrideAllowed(): bool
+    protected function isPaginationOverrideAllowedInQuery(): bool
     {
         return false;
     }
 
-    protected function isPerPageOverrideAllowed(): bool
+    protected function isPerPageOverrideAllowedInQuery(): bool
     {
         return false;
     }
@@ -199,6 +199,25 @@ class ActiveFilter
     }
 }
 ```
+
+##### Config-keyed filters
+
+`searchFilters()` can also return a keyed array to provide different filter sets per named configuration. The key matches the controller's `$configName`; `default` is used as a fallback when no matching key is found:
+
+```php
+class Item extends Model implements SearchableInterface
+{
+    public function searchFilters(): array
+    {
+        return [
+            'default' => [NameFilter::class],
+            'api'     => [ActiveFilter::class, NameFilter::class],
+        ];
+    }
+}
+```
+
+A controller using `protected string $configName = 'api'` will get `[ActiveFilter::class, NameFilter::class]`, while all others fall back to `[NameFilter::class]`.
 
 ---
 

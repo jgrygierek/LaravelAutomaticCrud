@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace JG\LaravelAutomaticCrud\Tests\Support\Controllers;
+namespace JG\LaravelAutomaticCrud\Tests\Support\Controllers\Pagination;
 
 use JG\LaravelAutomaticCrud\Http\Controllers\CrudableController;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
 
-class PaginationOnController extends CrudableController
+class PerPageOverrideOffController extends CrudableController
 {
     public function getModelClass(): string
     {
         return Item::class;
     }
 
-    protected function defaultIsPaginationEnabled(): bool
+    protected function isPerPageOverrideAllowedInQuery(): bool
     {
-        return true;
+        return false;
     }
 }
