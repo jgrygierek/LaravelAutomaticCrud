@@ -56,7 +56,7 @@ final class PaginationTraitTest extends TestCase
     public static function defaultIsPaginationEnabledProvider(): iterable
     {
         yield 'returns true by default' => [['automatic-crud' => null], true];
-        yield 'returns value from config' => [['automatic-crud.defaults.pagination.paginate' => false], false];
+        yield 'returns value from config' => [['automatic-crud.configs.default.pagination.paginate' => false], false];
     }
 
     #[Test]
@@ -71,7 +71,7 @@ final class PaginationTraitTest extends TestCase
     public static function defaultItemsPerPageProvider(): iterable
     {
         yield 'returns 10 by default' => [['automatic-crud' => null], 10];
-        yield 'returns value from config' => [['automatic-crud.defaults.pagination.per_page' => 25], 25];
+        yield 'returns value from config' => [['automatic-crud.configs.default.pagination.per_page' => 25], 25];
     }
 
     #[Test]
@@ -86,7 +86,7 @@ final class PaginationTraitTest extends TestCase
     public static function isPaginationOverrideAllowedProvider(): iterable
     {
         yield 'returns true by default' => [['automatic-crud' => null], true];
-        yield 'returns value from config' => [['automatic-crud.defaults.pagination.allow_pagination_override' => false], false];
+        yield 'returns value from config' => [['automatic-crud.configs.default.pagination.allow_pagination_override' => false], false];
     }
 
     #[Test]
@@ -101,6 +101,6 @@ final class PaginationTraitTest extends TestCase
     public static function isPerPageOverrideAllowedProvider(): iterable
     {
         yield 'returns true by default' => [['automatic-crud' => null], true];
-        yield 'returns value from config' => [['automatic-crud.defaults.pagination.allow_per_page_override' => false], false];
+        yield 'returns value from config' => [['automatic-crud.configs.default.pagination.allow_per_page_override' => false], false];
     }
 }

@@ -82,7 +82,7 @@ final class RequestTraitTest extends TestCase
     #[Test]
     public function throws_exception_when_class_not_found_and_force_custom_requests_is_enabled(): void
     {
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageMatches('/Request class \[.+\] not found\./');
@@ -93,7 +93,7 @@ final class RequestTraitTest extends TestCase
     #[Test]
     public function returns_class_when_it_exists_and_force_custom_requests_is_enabled(): void
     {
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
 
         $this->assertSame(StoreItemRequest::class, $this->controller->exposeGetRequestClass('Store'));
     }
@@ -101,8 +101,8 @@ final class RequestTraitTest extends TestCase
     #[Test]
     public function throws_exception_when_class_not_found_and_only_validated_requests_is_enabled(): void
     {
-        config()->set('automatic-crud.defaults.requests.only_validated', true);
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
+        config()->set('automatic-crud.configs.default.requests.only_validated', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageMatches('/Request class \[.+\] not found\./');
@@ -113,8 +113,8 @@ final class RequestTraitTest extends TestCase
     #[Test]
     public function returns_class_when_it_exists_and_only_validated_requests_is_enabled(): void
     {
-        config()->set('automatic-crud.defaults.requests.only_validated', true);
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
+        config()->set('automatic-crud.configs.default.requests.only_validated', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
 
         $this->assertSame(StoreItemRequest::class, $this->controller->exposeGetRequestClass('Store'));
     }
@@ -122,7 +122,7 @@ final class RequestTraitTest extends TestCase
     #[Test]
     public function throws_exception_when_only_validated_is_enabled_and_request_is_not_form_request(): void
     {
-        config()->set('automatic-crud.defaults.requests.only_validated', true);
+        config()->set('automatic-crud.configs.default.requests.only_validated', true);
 
         $controller = new class
         {
@@ -165,7 +165,7 @@ final class RequestTraitTest extends TestCase
     #[Test]
     public function get_request_namespace_returns_config_value(): void
     {
-        config()->set('automatic-crud.defaults.namespaces.request', 'App\Http\Requests');
+        config()->set('automatic-crud.configs.default.namespaces.request', 'App\Http\Requests');
 
         $controller = new class
         {
@@ -188,7 +188,7 @@ final class RequestTraitTest extends TestCase
     #[Test]
     public function get_request_namespace_override_takes_precedence_over_config(): void
     {
-        config()->set('automatic-crud.defaults.namespaces.request', 'App\Http\Requests');
+        config()->set('automatic-crud.configs.default.namespaces.request', 'App\Http\Requests');
 
         $controller = new class
         {

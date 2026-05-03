@@ -57,7 +57,7 @@ final class ConfigTraitTest extends TestCase
     #[Test]
     public function returns_value_from_config_defaults(): void
     {
-        config(['automatic-crud.defaults.pagination.per_page' => 25]);
+        config(['automatic-crud.configs.default.pagination.per_page' => 25]);
 
         $this->assertSame(25, $this->controller->exposeGetConfig('pagination.per_page'));
     }
@@ -66,8 +66,8 @@ final class ConfigTraitTest extends TestCase
     public function custom_config_value_overrides_default(): void
     {
         config([
-            'automatic-crud.defaults.pagination.per_page' => 10,
-            'automatic-crud.custom_configs.custom.pagination.per_page' => 50,
+            'automatic-crud.configs.default.pagination.per_page' => 10,
+            'automatic-crud.configs.custom.pagination.per_page' => 50,
         ]);
 
         $this->assertSame(50, $this->makeControllerWithCustomConfig()->exposeGetConfig('pagination.per_page'));
@@ -77,19 +77,19 @@ final class ConfigTraitTest extends TestCase
     public function falls_back_to_default_when_custom_config_key_missing(): void
     {
         config([
-            'automatic-crud.defaults.pagination.per_page' => 20,
-            'automatic-crud.custom_configs.custom.pagination.paginate' => false,
+            'automatic-crud.configs.default.pagination.per_page' => 20,
+            'automatic-crud.configs.custom.pagination.paginate' => false,
         ]);
 
         $this->assertSame(20, $this->makeControllerWithCustomConfig()->exposeGetConfig('pagination.per_page'));
     }
 
     #[Test]
-    public function empty_custom_config_skips_lookup(): void
+    public function default_config_skips_custom_lookup(): void
     {
         config([
-            'automatic-crud.defaults.pagination.per_page' => 15,
-            'automatic-crud.custom_configs.custom.pagination.per_page' => 99,
+            'automatic-crud.configs.default.pagination.per_page' => 15,
+            'automatic-crud.configs.custom.pagination.per_page' => 99,
         ]);
 
         $this->assertSame(15, $this->controller->exposeGetConfig('pagination.per_page'));
@@ -103,7 +103,7 @@ final class ConfigTraitTest extends TestCase
 
             public function __construct()
             {
-                $this->customConfig = 'custom';
+                $this->configName = 'custom';
             }
 
             public function exposeGetConfig(string $key): mixed

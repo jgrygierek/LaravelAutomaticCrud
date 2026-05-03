@@ -61,11 +61,11 @@ Both settings follow the same priority order (highest to lowest):
 
 1. Query parameter (`?pagination=true/false`, `?per_page=25`)
 2. Controller method (`defaultIsPaginationEnabled()`, `defaultItemsPerPage()`)
-3. Config (`automatic-crud.defaults.paginate`, `automatic-crud.defaults.per_page`)
+3. Config (`automatic-crud.configs.default.paginate`, `automatic-crud.configs.default.per_page`)
 
 ### Custom Configurations
 
-Controllers can set `protected string $customConfig = 'config_name'` to use a named config from `config/automatic-crud.php`, which overrides default values.
+Controllers can set `protected string $configName = 'config_name'` to use a named config from `config/automatic-crud.php`, which overrides default values.
 
 ### Sorting
 

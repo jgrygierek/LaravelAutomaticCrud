@@ -14,7 +14,7 @@ final class ShowDestroyWithCustomRequestTest extends CrudTestCase
     {
         parent::setUp();
 
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
     }
 
     #[Test]

@@ -28,7 +28,7 @@ final class ModelTraitTest extends TestCase
     #[Test]
     public function throws_when_no_model_found_by_convention(): void
     {
-        config()->set('automatic-crud.defaults.namespaces.model', 'App\Models');
+        config()->set('automatic-crud.configs.default.namespaces.model', 'App\Models');
 
         $controller = new class
         {
@@ -49,7 +49,7 @@ final class ModelTraitTest extends TestCase
     #[Test]
     public function get_model_namespace_returns_config_value(): void
     {
-        config()->set('automatic-crud.defaults.namespaces.model', 'App\Models');
+        config()->set('automatic-crud.configs.default.namespaces.model', 'App\Models');
 
         $controller = new class
         {
@@ -67,7 +67,7 @@ final class ModelTraitTest extends TestCase
     #[Test]
     public function get_model_namespace_override_takes_precedence_over_config(): void
     {
-        config()->set('automatic-crud.defaults.namespaces.model', 'App\Models');
+        config()->set('automatic-crud.configs.default.namespaces.model', 'App\Models');
 
         $controller = new class
         {

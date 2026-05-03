@@ -34,7 +34,7 @@ final class ServiceProviderTest extends TestCase
         $provider = new AutomaticCrudServiceProvider($this->app);
         $provider->register();
 
-        $this->assertNotEmpty(config('automatic-crud.defaults'));
+        $this->assertNotEmpty(config('automatic-crud.configs'));
     }
 
     #[Test]
@@ -43,11 +43,11 @@ final class ServiceProviderTest extends TestCase
         $provider = new AutomaticCrudServiceProvider($this->app);
         $provider->register();
 
-        config()->set('automatic-crud.defaults.requests.only_validated', true);
-        config()->set('automatic-crud.defaults.requests.force_custom', false);
+        config()->set('automatic-crud.configs.default.requests.only_validated', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', false);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Configuration error in automatic-crud.defaults: requests.only_validated requires requests.force_custom to be enabled.');
+        $this->expectExceptionMessage('Configuration error in automatic-crud.configs.default: requests.only_validated requires requests.force_custom to be enabled.');
 
         $provider->boot();
     }
@@ -58,7 +58,7 @@ final class ServiceProviderTest extends TestCase
         $provider = new AutomaticCrudServiceProvider($this->app);
         $provider->register();
 
-        config(['automatic-crud.defaults' => ['requests' => ['only_validated' => true]]]);
+        config(['automatic-crud.configs.default' => ['requests' => ['only_validated' => true]]]);
 
         $this->expectException(RuntimeException::class);
 
@@ -71,7 +71,7 @@ final class ServiceProviderTest extends TestCase
         $provider = new AutomaticCrudServiceProvider($this->app);
         $provider->register();
 
-        config(['automatic-crud.defaults' => ['requests' => ['force_custom' => false]]]);
+        config(['automatic-crud.configs.default' => ['requests' => ['force_custom' => false]]]);
 
         $provider->boot();
 
@@ -84,7 +84,7 @@ final class ServiceProviderTest extends TestCase
         $provider = new AutomaticCrudServiceProvider($this->app);
         $provider->register();
 
-        config()->set('automatic-crud.custom_configs.strict', [
+        config()->set('automatic-crud.configs.strict', [
             'requests' => [
                 'only_validated' => true,
                 'force_custom' => false,
@@ -92,7 +92,7 @@ final class ServiceProviderTest extends TestCase
         ]);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Configuration error in automatic-crud.custom_configs.strict: requests.only_validated requires requests.force_custom to be enabled.');
+        $this->expectExceptionMessage('Configuration error in automatic-crud.configs.strict: requests.only_validated requires requests.force_custom to be enabled.');
 
         $provider->boot();
     }
@@ -103,8 +103,8 @@ final class ServiceProviderTest extends TestCase
         $provider = new AutomaticCrudServiceProvider($this->app);
         $provider->register();
 
-        config()->set('automatic-crud.defaults.requests.only_validated', true);
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
+        config()->set('automatic-crud.configs.default.requests.only_validated', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
 
         $provider->boot();
 
@@ -117,8 +117,8 @@ final class ServiceProviderTest extends TestCase
         $provider = new AutomaticCrudServiceProvider($this->app);
         $provider->register();
 
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
-        config()->set('automatic-crud.custom_configs.strict', ['requests' => ['only_validated' => true]]);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
+        config()->set('automatic-crud.configs.strict', ['requests' => ['only_validated' => true]]);
 
         $provider->boot();
 

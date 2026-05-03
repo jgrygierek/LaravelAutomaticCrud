@@ -65,7 +65,7 @@ final class IndexTest extends CrudTestCase
     #[Test]
     public function pagination_disabled_by_config(): void
     {
-        config(['automatic-crud.defaults.pagination.paginate' => false]);
+        config(['automatic-crud.configs.default.pagination.paginate' => false]);
 
         Item::factory()->count(15)->create();
 
@@ -89,7 +89,7 @@ final class IndexTest extends CrudTestCase
     #[Test]
     public function pagination_enabled_via_query_param_overrides_disabled_config(): void
     {
-        config(['automatic-crud.defaults.pagination.paginate' => false]);
+        config(['automatic-crud.configs.default.pagination.paginate' => false]);
 
         Item::factory()->count(15)->create();
 
@@ -113,7 +113,7 @@ final class IndexTest extends CrudTestCase
     #[Test]
     public function pagination_enabled_by_method_overrides_disabled_config(): void
     {
-        config(['automatic-crud.defaults.pagination.paginate' => false]);
+        config(['automatic-crud.configs.default.pagination.paginate' => false]);
 
         Item::factory()->count(15)->create();
 
@@ -137,7 +137,7 @@ final class IndexTest extends CrudTestCase
     #[Test]
     public function pagination_query_param_overrides_method_when_method_returns_true(): void
     {
-        config(['automatic-crud.defaults.pagination.paginate' => false]);
+        config(['automatic-crud.configs.default.pagination.paginate' => false]);
 
         Item::factory()->count(15)->create();
 
@@ -150,7 +150,7 @@ final class IndexTest extends CrudTestCase
     #[Test]
     public function per_page_uses_config_value(): void
     {
-        config(['automatic-crud.defaults.pagination.per_page' => 5]);
+        config(['automatic-crud.configs.default.pagination.per_page' => 5]);
 
         Item::factory()->count(10)->create();
 
@@ -251,7 +251,7 @@ final class IndexTest extends CrudTestCase
     {
         Item::factory()->count(15)->create();
 
-        config(['automatic-crud.defaults.pagination.per_page' => 10]);
+        config(['automatic-crud.configs.default.pagination.per_page' => 10]);
 
         $this->getJson('/items?page=2')
             ->assertOk()
@@ -287,8 +287,8 @@ final class IndexTest extends CrudTestCase
     {
         yield 'by config' => [
             [
-                'automatic-crud.defaults.pagination.paginate' => true,
-                'automatic-crud.defaults.pagination.allow_pagination_override' => false,
+                'automatic-crud.configs.default.pagination.paginate' => true,
+                'automatic-crud.configs.default.pagination.allow_pagination_override' => false,
             ],
             '/items?pagination=false',
         ];
@@ -316,14 +316,14 @@ final class IndexTest extends CrudTestCase
     {
         yield 'by config' => [
             [
-                'automatic-crud.defaults.pagination.per_page' => 10,
-                'automatic-crud.defaults.pagination.allow_per_page_override' => false,
+                'automatic-crud.configs.default.pagination.per_page' => 10,
+                'automatic-crud.configs.default.pagination.allow_per_page_override' => false,
             ],
             '/items?per_page=3',
         ];
         yield 'by method' => [
             [
-                'automatic-crud.defaults.pagination.per_page' => 10,
+                'automatic-crud.configs.default.pagination.per_page' => 10,
             ],
             '/items-per-page-override-off?per_page=3',
         ];

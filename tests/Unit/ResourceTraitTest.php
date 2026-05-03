@@ -107,7 +107,7 @@ final class ResourceTraitTest extends TestCase
     #[Test]
     public function get_resource_namespace_returns_config_value(): void
     {
-        config()->set('automatic-crud.defaults.namespaces.resource', 'App\Http\Resources');
+        config()->set('automatic-crud.configs.default.namespaces.resource', 'App\Http\Resources');
 
         $controller = new class
         {
@@ -130,7 +130,7 @@ final class ResourceTraitTest extends TestCase
     #[Test]
     public function get_resource_namespace_override_takes_precedence_over_config(): void
     {
-        config()->set('automatic-crud.defaults.namespaces.resource', 'App\Http\Resources');
+        config()->set('automatic-crud.configs.default.namespaces.resource', 'App\Http\Resources');
 
         $controller = new class
         {

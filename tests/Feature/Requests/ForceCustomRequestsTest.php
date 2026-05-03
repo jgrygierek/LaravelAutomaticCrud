@@ -16,7 +16,7 @@ final class ForceCustomRequestsTest extends CrudTestCase
     {
         parent::setUp();
 
-        config()->set('automatic-crud.defaults.requests.force_custom', true);
+        config()->set('automatic-crud.configs.default.requests.force_custom', true);
     }
 
     protected function defineRoutes($router): void
