@@ -43,24 +43,18 @@ abstract class CrudableController extends Controller
      */
     public function store(): JsonResponse
     {
-        return DB::transaction(function () {
-            return $this
-                ->getResource(
-                    $this->getModelClass()::create(
-                        $this->getAllowedRequestValues(),
-                    ),
-                )
-                ->response()
-                ->setStatusCode(201);
-        });
+        $model = DB::transaction(fn (): Model => $this->getModelClass()::create(
+            $this->getAllowedRequestValues(),
+        ));
+
+        return $this->getResource($model)->response()->setStatusCode(201);
     }
 
     public function show(int|string $id): JsonResource
     {
-        $model = $this->findModel($id);
-        $this->applyRequest();
+        $this->validateRequest();
 
-        return $this->getResource($model);
+        return $this->getResource($this->findModel($id));
     }
 
     /**
@@ -68,12 +62,12 @@ abstract class CrudableController extends Controller
      */
     public function update(int|string $id): JsonResource
     {
-        return DB::transaction(fn () => $this->getResource(
-            tap(
-                $this->findModel($id),
-                fn (Model $model) => $model->update($this->getAllowedRequestValues()),
-            ),
+        $model = DB::transaction(fn (): Model => tap(
+            $this->findModel($id),
+            fn (Model $model) => $model->update($this->getAllowedRequestValues()),
         ));
+
+        return $this->getResource($model);
     }
 
     /**
@@ -81,15 +75,19 @@ abstract class CrudableController extends Controller
      */
     public function destroy(int|string $id): Response
     {
-        $model = $this->findModel($id);
-        $this->applyRequest();
+        $this->validateRequest();
 
-        DB::transaction(static fn () => $model->delete());
+        DB::transaction(fn () => $this->findModel($id)->delete());
 
         return response()->noContent();
     }
 
-    private function findModel(int|string $id): Model
+    protected function validateRequest(): void
+    {
+        $this->applyRequest();
+    }
+
+    protected function findModel(int|string $id): Model
     {
         $query = $this->modifyQuery($this->getModelClass()::query());
 

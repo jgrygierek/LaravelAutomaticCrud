@@ -184,6 +184,8 @@ Route::delete('orders/{order:uid}', [OrderController::class, 'destroy']);
 
 The controller keeps the usual `show(int|string $id)` signature — the `uid` segment is resolved automatically from the route definition. Routes without an explicit binding field keep using the model's route key.
 
+`findModel()` is `protected`, so it can be overridden entirely if the lookup logic above doesn't fit (e.g. querying across multiple tables).
+
 #### Filtering with `SearchableInterface`
 
 Implement `SearchableInterface` on a model to enable pipeline-based filtering on the `index` endpoint:
@@ -273,6 +275,8 @@ Given `ItemController`, the package looks for form request classes at:
 | destroy | `{request_namespace}\{Models}\Destroy{Model}Request` | `App\Http\Requests\Items\DestroyItemRequest` |
 
 Form requests are optional by default — if the class does not exist, the standard `request()` is used.
+
+For `show` and `destroy`, the form request is resolved (and its `authorize()`/validation rules run) before the record is looked up. An unauthorized or invalid request therefore returns `403`/`422` instead of `404`, even when the record does not exist — this avoids leaking record existence to callers who aren't allowed to access it in the first place.
 
 #### Force custom requests
 
