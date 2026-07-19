@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace JG\LaravelAutomaticCrud\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use JG\LaravelAutomaticCrud\Traits\ConfigTrait;
 use JG\LaravelAutomaticCrud\Traits\ModelTrait;
 use JG\LaravelAutomaticCrud\Traits\PaginationTrait;
@@ -89,6 +91,17 @@ abstract class CrudableController extends Controller
 
     private function findModel(int|string $id): Model
     {
-        return $this->getModelClass()::findOrFail($id);
+        $query = $this->modifyQuery($this->getModelClass()::query());
+
+        return $query->where($this->resolveRouteKeyColumn($query), $id)->firstOrFail();
+    }
+
+    private function resolveRouteKeyColumn(Builder $query): string
+    {
+        $route = Route::getCurrentRoute();
+        $parameterName = $route ? last($route->parameterNames()) : null;
+
+        return ($parameterName ? $route->bindingFieldFor($parameterName) : null)
+            ?? $query->getModel()->getRouteKeyName();
     }
 }
