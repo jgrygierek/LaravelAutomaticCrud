@@ -32,12 +32,12 @@ final class PaginationTraitTest extends TestCase
                 return $this->defaultItemsPerPage();
             }
 
-            public function exposeisPaginationOverrideAllowedInQuery(): bool
+            public function exposeIsPaginationOverrideAllowedInQuery(): bool
             {
                 return $this->isPaginationOverrideAllowedInQuery();
             }
 
-            public function exposeisPerPageOverrideAllowedInQuery(): bool
+            public function exposeIsPerPageOverrideAllowedInQuery(): bool
             {
                 return $this->isPerPageOverrideAllowedInQuery();
             }
@@ -80,7 +80,7 @@ final class PaginationTraitTest extends TestCase
     {
         config($config);
 
-        $this->assertSame($expected, $this->controller->exposeisPaginationOverrideAllowedInQuery());
+        $this->assertSame($expected, $this->controller->exposeIsPaginationOverrideAllowedInQuery());
     }
 
     public static function isPaginationOverrideAllowedInQueryProvider(): iterable
@@ -95,7 +95,7 @@ final class PaginationTraitTest extends TestCase
     {
         config($config);
 
-        $this->assertSame($expected, $this->controller->exposeisPerPageOverrideAllowedInQuery());
+        $this->assertSame($expected, $this->controller->exposeIsPerPageOverrideAllowedInQuery());
     }
 
     public static function isPerPageOverrideAllowedInQueryProvider(): iterable
