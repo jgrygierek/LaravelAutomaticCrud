@@ -27,6 +27,7 @@ trait ConfigTrait
             'namespaces.request' => 'App\Http\Requests',
             'namespaces.model' => 'App\Models',
             'namespaces.resource' => 'App\Http\Resources',
+            'namespaces.event' => 'App\Events',
             'pagination.paginate', 'pagination.allow_pagination_override', 'pagination.allow_per_page_override' => true,
             'pagination.per_page' => 10,
             default => null,

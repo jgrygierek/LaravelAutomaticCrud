@@ -9,6 +9,7 @@ return [
                 'request' => 'App\Http\Requests',
                 'model' => 'App\Models',
                 'resource' => 'App\Http\Resources',
+                'event' => 'App\Events',
             ],
             'pagination' => [
                 'paginate' => true,
