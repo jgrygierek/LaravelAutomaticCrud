@@ -12,7 +12,9 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use JG\LaravelAutomaticCrud\Enums\EventAction;
 use JG\LaravelAutomaticCrud\Traits\ConfigTrait;
+use JG\LaravelAutomaticCrud\Traits\EventTrait;
 use JG\LaravelAutomaticCrud\Traits\ModelTrait;
 use JG\LaravelAutomaticCrud\Traits\PaginationTrait;
 use JG\LaravelAutomaticCrud\Traits\RequestTrait;
@@ -23,6 +25,7 @@ use Throwable;
 abstract class CrudableController extends Controller
 {
     use ConfigTrait,
+        EventTrait,
         ModelTrait,
         PaginationTrait,
         RequestTrait,
@@ -47,6 +50,8 @@ abstract class CrudableController extends Controller
             $this->getAllowedRequestValues(),
         ));
 
+        $this->dispatchEvent(EventAction::Created, $model);
+
         return $this->getResource($model)->response()->setStatusCode(201);
     }
 
@@ -67,6 +72,8 @@ abstract class CrudableController extends Controller
             fn (Model $model) => $model->update($this->getAllowedRequestValues()),
         ));
 
+        $this->dispatchEvent(EventAction::Updated, $model);
+
         return $this->getResource($model);
     }
 
@@ -77,7 +84,12 @@ abstract class CrudableController extends Controller
     {
         $this->validateRequest();
 
-        DB::transaction(fn () => $this->findModel($id)->delete());
+        $model = DB::transaction(fn (): Model => tap(
+            $this->findModel($id),
+            fn (Model $model) => $model->delete(),
+        ));
+
+        $this->dispatchEvent(EventAction::Deleted, $model);
 
         return response()->noContent();
     }

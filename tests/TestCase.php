@@ -25,5 +25,6 @@ abstract class TestCase extends Orchestra
         $app['config']->set('automatic-crud.configs.default.namespaces.model', 'JG\LaravelAutomaticCrud\Tests\Support\Models');
         $app['config']->set('automatic-crud.configs.default.namespaces.resource', 'JG\LaravelAutomaticCrud\Tests\Support\Resources');
         $app['config']->set('automatic-crud.configs.default.namespaces.request', 'JG\LaravelAutomaticCrud\Tests\Support\Requests');
+        $app['config']->set('automatic-crud.configs.default.namespaces.event', 'JG\LaravelAutomaticCrud\Tests\Support\Events');
     }
 }

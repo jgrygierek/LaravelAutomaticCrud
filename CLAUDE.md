@@ -40,6 +40,8 @@ Abstract base controller providing `index`, `store`, `show`, `update`, `destroy`
 - `getResourceCollectionClass(): string` — override collection resource class entirely, bypassing convention
 - `getResourceNamespace(): string` — override resource namespace without touching config
 - `getRequestNamespace(): string` — override form request namespace without touching config
+- `getEventNamespace(): string` — override event namespace without touching config
+- `getEvents(): array` — override the `Action => event class|null` map for specific actions; defaults to `[]`. Actions absent as a key still fall back to the naming convention; an action explicitly mapped to `null` is disabled
 - `modifyQuery(Builder $query): Builder` — customize the query before pagination
 - `defaultIsPaginationEnabled(): bool` — override pagination on/off (defaults to config value)
 - `defaultItemsPerPage(): int` — override per-page count (defaults to config value)
@@ -51,6 +53,7 @@ Resources and form requests are resolved by convention, but resource classes can
 - Resource: `{resource_namespace}\{ModelName}Resource` (falls back to `JsonResource`)
 - Collection resource: `{resource_namespace}\{ModelName}CollectionResource` (falls back to `{ModelName}Resource`, then `JsonResource`)
 - Form request: `{request_namespace}\{ModelNamePlural}\{Action}{ModelName}Request` (optional — skipped if class doesn't exist)
+- Event: `{event_namespace}\{ModelName}{Action}Event` where `Action` is `Created`, `Updated`, or `Deleted` (optional — skipped if class doesn't exist, dispatched after `store`/`update`/`destroy` with the affected model)
 
 Form request validation is applied inside each action via `RequestTrait::applyRequest()`. For all five CRUD actions this happens automatically.
 For custom actions, validation must be triggered manually or by declaring a `FormRequest` parameter (Laravel's own injection handles it).
@@ -71,6 +74,10 @@ Controllers can set `protected string $configName = 'config_name'` to use a name
 
 `?sort_by=field` triggers sorting. `?sort_direction=asc|desc` is optional — defaults to `asc` when omitted. 
 Sorting is skipped when the query already has an `orderBy` clause (e.g., applied inside `modifyQuery()`).
+
+### Events
+
+`store`, `update`, and `destroy` dispatch a convention-resolved event with the affected model after the action completes; the event class is optional and skipped when it doesn't exist. Override `getEvents()` to customize or disable specific actions — it merges with the convention on a per-action basis rather than replacing it wholesale. `index` and `show` never dispatch events.
 
 ### Searchable Interface
 

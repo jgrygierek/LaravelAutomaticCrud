@@ -29,6 +29,10 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
         - [Namespace override](#namespace-override-2)
         - [Resource class convention](#resource-class-convention)
         - [Resource class override](#resource-class-override)
+    - [Events](#events)
+        - [Namespace override](#namespace-override-3)
+        - [Event class convention](#event-class-convention)
+        - [Event class override](#event-class-override)
 - [Configuration](#configuration)
     - [Custom configurations](#custom-configurations)
 - [Development](#development)
@@ -360,6 +364,71 @@ class ItemController extends CrudableController
 
 ---
 
+### Events
+
+#### Namespace override
+
+Override `getEventNamespace()` in the controller to resolve events from a different namespace without touching the config:
+
+```php
+class ItemController extends CrudableController
+{
+    protected function getEventNamespace(): string
+    {
+        return 'Domain\Inventory\Events';
+    }
+}
+```
+
+Priority order (highest to lowest):
+
+1. `getEventNamespace()` controller override
+2. Custom configuration value
+3. Config default (`namespaces.event`)
+4. Hardcoded fallback (`App\Events`)
+
+#### Event class convention
+
+Given `ItemController`, the package looks for event classes at:
+
+| Action  | Convention                            | Example                          |
+|---------|----------------------------------------|-----------------------------------|
+| store   | `{event_namespace}\{Model}CreatedEvent` | `App\Events\ItemCreatedEvent`    |
+| update  | `{event_namespace}\{Model}UpdatedEvent` | `App\Events\ItemUpdatedEvent`    |
+| destroy | `{event_namespace}\{Model}DeletedEvent` | `App\Events\ItemDeletedEvent`    |
+
+Events are optional — if the class does not exist, nothing is dispatched. When it exists, it's instantiated with the affected model and dispatched through Laravel's event dispatcher:
+
+```php
+class ItemCreatedEvent
+{
+    public function __construct(public readonly Model $model) {}
+}
+```
+
+`index` and `show` never dispatch events.
+
+#### Event class override
+
+Override `getEvents()` to control exactly which event class is dispatched for specific actions. It defaults to an empty array — any action *not* present as a key still falls back to the naming convention. An action mapped explicitly to `null` is disabled, bypassing the convention entirely:
+
+```php
+class ItemController extends CrudableController
+{
+    protected function getEvents(): array
+    {
+        return [
+            'Created' => CustomItemCreatedEvent::class,
+            'Deleted' => null,
+        ];
+    }
+}
+```
+
+In the example above, `store` dispatches `CustomItemCreatedEvent` instead of the convention class, `destroy` dispatches nothing, and `update` is untouched — it still resolves `ItemUpdatedEvent` by convention, since `'Updated'` isn't a key in the array.
+
+---
+
 ## Configuration
 
 ```php
@@ -371,6 +440,7 @@ return [
                 'model'    => 'App\Models',
                 'resource' => 'App\Http\Resources',
                 'request'  => 'App\Http\Requests',
+                'event'    => 'App\Events',
             ],
             'pagination' => [
                 'paginate'                  => true,
