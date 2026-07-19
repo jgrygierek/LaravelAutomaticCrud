@@ -18,6 +18,7 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
         - [Model class override](#model-class-override)
         - [Pagination and sorting](#pagination-and-sorting)
         - [Customizing the query](#customizing-the-query)
+        - [Looking up records by a custom key](#looking-up-records-by-a-custom-key)
         - [Filtering with SearchableInterface](#filtering-with-searchableinterface)
     - [Requests](#requests)
         - [Namespace override](#namespace-override-1)
@@ -167,6 +168,21 @@ class ItemController extends CrudableController
     }
 }
 ```
+
+`modifyQuery()` is also applied when `show`, `update`, and `destroy` look up a record, so scoping such as multi-tenancy or ownership filters is enforced consistently everywhere, not just on `index`.
+
+#### Looking up records by a custom key
+
+`show`, `update`, and `destroy` look up the record by the model's route key (`getRouteKeyName()`, which falls back to the primary key by default). To look up by a different column on a specific route — without changing the model globally — use Laravel's route binding field syntax:
+
+```php
+// routes/api.php
+Route::get('orders/{order:uid}', [OrderController::class, 'show']);
+Route::put('orders/{order:uid}', [OrderController::class, 'update']);
+Route::delete('orders/{order:uid}', [OrderController::class, 'destroy']);
+```
+
+The controller keeps the usual `show(int|string $id)` signature — the `uid` segment is resolved automatically from the route definition. Routes without an explicit binding field keep using the model's route key.
 
 #### Filtering with `SearchableInterface`
 
