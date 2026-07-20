@@ -101,7 +101,9 @@ abstract class CrudableController extends Controller
 
     protected function findModel(int|string $id): Model
     {
-        $query = $this->modifyQuery($this->getModelClass()::query());
+        $query = $this
+            ->modifyQuery($this->getModelClass()::query())
+            ->withoutGlobalScopes($this->withoutGlobalScopes());
 
         return $query->where($this->resolveRouteKeyColumn($query), $id)->firstOrFail();
     }

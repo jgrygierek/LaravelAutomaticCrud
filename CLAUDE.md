@@ -43,6 +43,7 @@ Abstract base controller providing `index`, `store`, `show`, `update`, `destroy`
 - `getEventNamespace(): string` — override event namespace without touching config
 - `getEvents(): array` — override the `Action => event class|null` map for specific actions; defaults to `[]`. Actions absent as a key still fall back to the naming convention; an action explicitly mapped to `null` is disabled
 - `modifyQuery(Builder $query): Builder` — customize the query before pagination
+- `withoutGlobalScopes(): array` — global scope classes to exclude from every query the controller builds (`index`, `show`, `update`, `destroy`); defaults to `[]`
 - `defaultIsPaginationEnabled(): bool` — override pagination on/off (defaults to config value)
 - `defaultItemsPerPage(): int` — override per-page count (defaults to config value)
 - `isPaginationOverrideAllowedInQuery(): bool` — whether `?pagination=` query param is respected (defaults to config value)
