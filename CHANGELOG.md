@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Route binding field support for `show`, `update`, and `destroy`: a route defined with an explicit binding field (e.g. `Route::get('orders/{order:uid}', ...)`) is now looked up by that column instead of the model's route key.
 - Convention-based event dispatching: `store`, `update`, and `destroy` now dispatch `{event_namespace}\{ModelName}CreatedEvent`/`UpdatedEvent`/`DeletedEvent` with the affected model when the class exists. Configurable via `namespaces.event`, overridable via `getEventNamespace()` and, per action, `getEvents()` — which defaults to `[]` and merges with the convention rather than replacing it.
+- `withoutGlobalScopes()` hook: override it to exclude specific global scopes from every query the controller builds (`index`, `show`, `update`, `destroy`). Defaults to `[]`.
 
 ### Changed
 

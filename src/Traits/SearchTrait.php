@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JG\LaravelAutomaticCrud\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Pipeline;
 use JG\LaravelAutomaticCrud\Http\Interfaces\SearchableInterface;
@@ -24,12 +25,24 @@ trait SearchTrait
             $query = $this->pipelineSearch($query, new $modelClass());
         }
 
-        return $this->applySorting($this->modifyQuery($query), $request);
+        $query = $this
+            ->modifyQuery($query)
+            ->withoutGlobalScopes($this->withoutGlobalScopes());
+
+        return $this->applySorting($query, $request);
     }
 
     protected function modifyQuery(Builder $query): Builder
     {
         return $query;
+    }
+
+    /**
+     * @return list<class-string<Scope>|string>
+     */
+    protected function withoutGlobalScopes(): array
+    {
+        return [];
     }
 
     protected function pipelineSearch(Builder $query, SearchableInterface $object): Builder

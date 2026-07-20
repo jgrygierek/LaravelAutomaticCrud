@@ -19,6 +19,7 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
         - [Pagination and sorting](#pagination-and-sorting)
         - [Customizing the query](#customizing-the-query)
         - [Looking up records by a custom key](#looking-up-records-by-a-custom-key)
+        - [Skipping global scopes](#skipping-global-scopes)
         - [Filtering with SearchableInterface](#filtering-with-searchableinterface)
     - [Requests](#requests)
         - [Namespace override](#namespace-override-1)
@@ -189,6 +190,22 @@ Route::delete('orders/{order:uid}', [OrderController::class, 'destroy']);
 The controller keeps the usual `show(int|string $id)` signature — the `uid` segment is resolved automatically from the route definition. Routes without an explicit binding field keep using the model's route key.
 
 `findModel()` is `protected`, so it can be overridden entirely if the lookup logic above doesn't fit (e.g. querying across multiple tables).
+
+#### Skipping global scopes
+
+`index`, `show`, `update`, and `destroy` all apply any global scopes registered on the model. Override `withoutGlobalScopes()` to exclude specific global scopes across all four:
+
+```php
+class OrderController extends CrudableController
+{
+    protected function withoutGlobalScopes(): array
+    {
+        return [PublishedScope::class];
+    }
+}
+```
+
+Applies uniformly everywhere the model is queried — there's no per-action opt-out. Defaults to `[]` (no scopes skipped).
 
 #### Filtering with `SearchableInterface`
 
