@@ -15,6 +15,7 @@ use JG\LaravelAutomaticCrud\Tests\TestCase;
 use JG\LaravelAutomaticCrud\Traits\ConfigTrait;
 use JG\LaravelAutomaticCrud\Traits\EventTrait;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 
 final class EventTraitTest extends TestCase
 {
@@ -71,6 +72,37 @@ final class EventTraitTest extends TestCase
 
         Event::assertDispatched(ItemUpdatedEvent::class);
         Event::assertNotDispatched(ItemCreatedEvent::class);
+    }
+
+    #[Test]
+    public function throws_when_overridden_events_map_references_missing_class(): void
+    {
+        Event::fake();
+
+        $controller = new class
+        {
+            use ConfigTrait, EventTrait;
+
+            public function getModelClass(): string
+            {
+                return Item::class;
+            }
+
+            protected function getEvents(): array
+            {
+                return ['Created' => 'JG\LaravelAutomaticCrud\Tests\Support\Events\MissingEvent'];
+            }
+
+            public function exposeDispatchEvent(EventAction $action, Model $model): void
+            {
+                $this->dispatchEvent($action, $model);
+            }
+        };
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Event class [JG\LaravelAutomaticCrud\Tests\Support\Events\MissingEvent] not found.');
+
+        $controller->exposeDispatchEvent(EventAction::Created, $this->createStub(Item::class));
     }
 
     #[Test]

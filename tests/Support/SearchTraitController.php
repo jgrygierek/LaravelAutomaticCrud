@@ -13,14 +13,17 @@ class SearchTraitController
 
     public function __construct(
         private readonly string $model,
-        string $configName = 'default',
-    ) {
-        $this->configName = $configName;
-    }
+        private readonly string $configName = 'default',
+    ) {}
 
     public function getModelClass(): string
     {
         return $this->model;
+    }
+
+    protected function getConfigName(): string
+    {
+        return $this->configName;
     }
 
     public function exposeBuildQuery(): Builder

@@ -104,9 +104,9 @@ final class ConfigTraitTest extends TestCase
         {
             use ConfigTrait;
 
-            public function __construct()
+            protected function getConfigName(): string
             {
-                $this->configName = 'custom';
+                return 'custom';
             }
 
             public function exposeGetConfig(string $key): mixed

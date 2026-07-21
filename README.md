@@ -263,7 +263,7 @@ class ActiveFilter
 
 ##### Config-keyed filters
 
-`searchFilters()` can also return a keyed array to provide different filter sets per named configuration. The key matches the controller's `$configName`; `default` is used as a fallback when no matching key is found:
+`searchFilters()` can also return a keyed array to provide different filter sets per named configuration. The key matches the controller's `getConfigName()`; `default` is used as a fallback when no matching key is found:
 
 ```php
 class Item extends Model implements SearchableInterface
@@ -278,7 +278,7 @@ class Item extends Model implements SearchableInterface
 }
 ```
 
-A controller using `protected string $configName = 'api'` will get `[ActiveFilter::class, NameFilter::class]`, while all others fall back to `[NameFilter::class]`.
+A controller overriding `getConfigName()` to return `'api'` will get `[ActiveFilter::class, NameFilter::class]`, while all others fall back to `[NameFilter::class]`.
 
 ---
 
@@ -489,6 +489,8 @@ class ItemController extends CrudableController
 
 In the example above, `store` dispatches `CustomItemCreatedEvent` instead of the convention class, `destroy` dispatches nothing, and `update` is untouched — it still resolves `ItemUpdatedEvent` by convention, since `'Updated'` isn't a key in the array.
 
+Unlike the convention (which silently skips a missing class), a class mapped explicitly in `getEvents()` must exist — a typo or a class that was renamed/removed throws a `RuntimeException` instead of silently dispatching nothing.
+
 ---
 
 ## Configuration
@@ -532,7 +534,10 @@ A controller can select a named configuration to override default values:
 ```php
 class ItemController extends CrudableController
 {
-    protected string $configName = 'api';
+    protected function getConfigName(): string
+    {
+        return 'api';
+    }
 }
 ```
 

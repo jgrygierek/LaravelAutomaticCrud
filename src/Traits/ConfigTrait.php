@@ -6,16 +6,21 @@ namespace JG\LaravelAutomaticCrud\Traits;
 
 trait ConfigTrait
 {
-    protected string $configName = 'default';
+    protected function getConfigName(): string
+    {
+        return 'default';
+    }
 
     protected function getConfig(string $key): mixed
     {
-        $value = config("automatic-crud.configs.$this->configName.$key");
+        $configName = $this->getConfigName();
+
+        $value = config("automatic-crud.configs.$configName.$key");
         if ($value !== null) {
             return $value;
         }
 
-        if ($this->configName !== 'default') {
+        if ($configName !== 'default') {
             $value = config("automatic-crud.configs.default.$key");
             if ($value !== null) {
                 return $value;
