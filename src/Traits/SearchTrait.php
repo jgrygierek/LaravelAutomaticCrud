@@ -12,9 +12,9 @@ use JG\LaravelAutomaticCrud\Http\Interfaces\SearchableInterface;
 
 trait SearchTrait
 {
-    protected string $configName = 'default';
-
     abstract protected function getModelClass(): string;
+
+    abstract protected function getConfigName(): string;
 
     protected function buildQuery(Request $request): Builder
     {
@@ -61,7 +61,7 @@ trait SearchTrait
             return $filters;
         }
 
-        return $filters[$this->configName] ?? $filters['default'] ?? [];
+        return $filters[$this->getConfigName()] ?? $filters['default'] ?? [];
     }
 
     private function canAddSearchFilters(string $modelClass): bool

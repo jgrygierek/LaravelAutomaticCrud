@@ -78,7 +78,7 @@ Both settings follow the same priority order (highest to lowest):
 
 ### Custom Configurations
 
-Controllers can set `protected string $configName = 'config_name'` to use a named config from `config/automatic-crud.php`, which overrides default values.
+Controllers can override `getConfigName(): string` (defaults to `'default'`) to use a named config from `config/automatic-crud.php`, which overrides default values.
 
 ### Sorting
 
@@ -89,11 +89,13 @@ Sorting is skipped when the query already has an `orderBy` clause (e.g., applied
 
 `store`, `update`, and `destroy` dispatch a convention-resolved event with the affected model after the action completes; the event class is optional and skipped when it doesn't exist. Override `getEvents()` to customize or disable specific actions — it merges with the convention on a per-action basis rather than replacing it wholesale. `index` and `show` never dispatch events.
 
+Unlike the convention, a class explicitly mapped in `getEvents()` is not optional: if it doesn't exist, `dispatchEvent()` throws a `RuntimeException` instead of silently skipping it, since a missing class there is a typo/misconfiguration rather than an absent-by-design convention class.
+
 ### Searchable Interface
 
 Models implementing `SearchableInterface` must define `searchFilters(): array` returning filter pipeline classes. These are applied automatically in `index`.
 
-`searchFilters()` can return either a flat array of filter classes or a keyed array where each key is a config name. When keyed, the controller's `$configName` selects the matching set; falls back to `default`, then `[]`.
+`searchFilters()` can return either a flat array of filter classes or a keyed array where each key is a config name. When keyed, the controller's `getConfigName()` selects the matching set; falls back to `default`, then `[]`.
 
 ## Tests
 

@@ -107,6 +107,11 @@ final class SearchTraitTest extends TestCase
                 return Item::class;
             }
 
+            protected function getConfigName(): string
+            {
+                return 'default';
+            }
+
             protected function modifyQuery(Builder $query): Builder
             {
                 return $query->orderBy('id', 'asc');

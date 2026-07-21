@@ -6,6 +6,7 @@ namespace JG\LaravelAutomaticCrud\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use JG\LaravelAutomaticCrud\Enums\EventAction;
+use RuntimeException;
 
 trait EventTrait
 {
@@ -30,9 +31,15 @@ trait EventTrait
     {
         $events = $this->getEvents();
 
-        $class = array_key_exists($action->value, $events)
-            ? $events[$action->value]
-            : $this->resolveEventClass($action);
+        if (array_key_exists($action->value, $events)) {
+            $class = $events[$action->value];
+
+            if ($class !== null && !class_exists($class)) {
+                throw new RuntimeException("Event class [$class] not found.");
+            }
+        } else {
+            $class = $this->resolveEventClass($action);
+        }
 
         if ($class) {
             event(new $class($model));

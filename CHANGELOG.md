@@ -18,7 +18,9 @@ All notable changes to this project will be documented in this file.
 - `store()` and `update()` now build the resource response after the database transaction commits, instead of inside it.
 - `applyRequest()` now memoizes the resolved request on an instance property. Calling it more than once in the same request lifecycle (directly and/or via `getAllowedRequestValues()`/`validateRequest()`) returns the same instance instead of resolving — and re-validating — a new one.
 - `store()` now resolves and validates the request before opening the database transaction that creates the model, instead of doing so inside it.
+- Named configuration selection is now controlled via `getConfigName(): string` (defaults to `'default'`) instead of the `protected string $configName` property, matching every other override in the package's API. `ConfigTrait` and `SearchTrait` no longer each declare their own copy of the same property.
 
 ### Fixed
 
 - Registered `AutomaticCrudServiceProvider` under `extra.laravel.providers` in `composer.json`, so Laravel's package auto-discovery actually registers it in consuming applications. It was previously missing, meaning config merging, config validation, and `vendor:publish` never ran outside this repo's own test suite (which registers the provider manually via Testbench).
+- `dispatchEvent()` now throws a `RuntimeException` when a class explicitly mapped in `getEvents()` doesn't exist, instead of silently dispatching nothing. Only the naming-convention fallback is optional; an explicit override is a programmer error if the class is missing.
