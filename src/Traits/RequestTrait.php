@@ -12,6 +12,8 @@ use RuntimeException;
 
 trait RequestTrait
 {
+    private ?Request $resolvedRequest = null;
+
     abstract protected function getModelClass(): string;
 
     abstract protected function getConfig(string $key): mixed;
@@ -23,11 +25,15 @@ trait RequestTrait
 
     protected function applyRequest(): Request
     {
+        if ($this->resolvedRequest !== null) {
+            return $this->resolvedRequest;
+        }
+
         $class = $this->getRequestClass(
             Str::ucfirst(Route::getCurrentRoute()?->getActionMethod() ?: ''),
         );
 
-        return $class ? app($class) : request();
+        return $this->resolvedRequest = $class ? app($class) : request();
     }
 
     protected function getAllowedRequestValues(): array

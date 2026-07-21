@@ -20,12 +20,14 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
         - [Customizing the query](#customizing-the-query)
         - [Looking up records by a custom key](#looking-up-records-by-a-custom-key)
         - [Skipping global scopes](#skipping-global-scopes)
+        - [Customizing persistence](#customizing-persistence)
         - [Filtering with SearchableInterface](#filtering-with-searchableinterface)
     - [Requests](#requests)
         - [Namespace override](#namespace-override-1)
         - [Request class convention](#request-class-convention)
         - [Force custom requests](#force-custom-requests)
         - [Only validated fields](#only-validated-fields)
+        - [Reusing an already-resolved request](#reusing-an-already-resolved-request)
     - [Resources](#resources)
         - [Namespace override](#namespace-override-2)
         - [Resource class convention](#resource-class-convention)
@@ -207,6 +209,26 @@ class OrderController extends CrudableController
 
 Applies uniformly everywhere the model is queried — there's no per-action opt-out. Defaults to `[]` (no scopes skipped).
 
+#### Customizing persistence
+
+`store`, `update`, and `destroy` delegate the actual write to `createModel()`, `updateModel()`, and `deleteModel()`. Override any of them to add side effects around the write, without duplicating the surrounding transaction, event dispatch, or response handling:
+
+```php
+class OrderController extends CrudableController
+{
+    protected function updateModel(Model $model, array $data): Model
+    {
+        if (array_key_exists('status', $data) && $model->status !== $data['status']) {
+            $model->tokens()->delete();
+        }
+
+        return parent::updateModel($model, $data);
+    }
+}
+```
+
+If the change goes beyond the persistence step itself (e.g. it also affects which event fires or what's returned), override the whole action (`store()`, `update()`, `destroy()`) instead.
+
 #### Filtering with `SearchableInterface`
 
 Implement `SearchableInterface` on a model to enable pipeline-based filtering on the `index` endpoint:
@@ -297,7 +319,7 @@ Given `ItemController`, the package looks for form request classes at:
 
 Form requests are optional by default — if the class does not exist, the standard `request()` is used.
 
-For `show` and `destroy`, the form request is resolved (and its `authorize()`/validation rules run) before the record is looked up. An unauthorized or invalid request therefore returns `403`/`422` instead of `404`, even when the record does not exist — this avoids leaking record existence to callers who aren't allowed to access it in the first place.
+For `show`, `update`, and `destroy`, the record is looked up via `findModel()` before the form request is resolved and validated, so a missing record always returns `404` regardless of the request body or authorization outcome.
 
 #### Force custom requests
 
@@ -321,6 +343,29 @@ when the form request class is not a `FormRequest`:
     'force_custom'   => true,
     'only_validated' => true,
 ],
+```
+
+#### Reusing an already-resolved request
+
+`applyRequest()` memoizes the resolved request for the lifetime of the controller instance, so calling it more than once — directly and/or via `getAllowedRequestValues()`/`validateRequest()` — always returns the same instance instead of resolving (and re-validating) a new one. This makes it safe to resolve the request yourself for custom logic in a fully overridden action, and still use `getAllowedRequestValues()` afterwards:
+
+```php
+class UserController extends CrudableController
+{
+    public function update(int|string $id): JsonResource
+    {
+        $request = $this->applyRequest();
+        $user = $this->findModel($id);
+
+        $user->update($this->getAllowedRequestValues());
+
+        if ($request->has('role')) {
+            $user->syncRoles([$request->validated('role')]);
+        }
+
+        return $this->getResource($user);
+    }
+}
 ```
 
 ---

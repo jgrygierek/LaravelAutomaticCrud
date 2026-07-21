@@ -48,6 +48,9 @@ Abstract base controller providing `index`, `store`, `show`, `update`, `destroy`
 - `defaultItemsPerPage(): int` — override per-page count (defaults to config value)
 - `isPaginationOverrideAllowedInQuery(): bool` — whether `?pagination=` query param is respected (defaults to config value)
 - `isPerPageOverrideAllowedInQuery(): bool` — whether `?per_page=` query param is respected (defaults to config value)
+- `createModel(array $data): Model` — persist a new model in `store()`; defaults to `{Model}::create($data)`
+- `updateModel(Model $model, array $data): Model` — persist changes to a model in `update()`; defaults to `$model->update($data)`
+- `deleteModel(Model $model): Model` — delete a model in `destroy()`; defaults to `$model->delete()`
 
 Resources and form requests are resolved by convention, but resource classes can also be overridden via `getResourceClass()` / `getResourceCollectionClass()`:
 
@@ -58,6 +61,12 @@ Resources and form requests are resolved by convention, but resource classes can
 
 Form request validation is applied inside each action via `RequestTrait::applyRequest()`. For all five CRUD actions this happens automatically.
 For custom actions, validation must be triggered manually or by declaring a `FormRequest` parameter (Laravel's own injection handles it).
+
+`getAllowedRequestValues()` resolves the request via `applyRequest()` and returns `validated()` or `all()`, depending on `requests.only_validated`.
+
+`applyRequest()` memoizes the resolved request on an instance property, so calling it more than once within the same request lifecycle (directly and/or via `getAllowedRequestValues()`/`validateRequest()`) always returns the same instance instead of re-resolving — resolving a `FormRequest` from the container re-runs its validation, so without memoization, calling `applyRequest()` twice would validate twice. This makes it safe to call `applyRequest()` directly for custom logic in a fully overridden action and still use `getAllowedRequestValues()` afterwards without a second validation pass. The cache is an instance property, not `static`, since `static` would leak the resolved request across requests handled by the same PHP process (queue workers, Octane).
+
+`show`, `update`, and `destroy` look up the record via `findModel()` before resolving/validating the request, so a missing record returns `404` regardless of whether the request body would otherwise pass validation or authorization. `store` has no record to look up, so it resolves and validates the request before opening the database transaction that creates the model.
 
 ### Pagination & Per-Page Priority
 
