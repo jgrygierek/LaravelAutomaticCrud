@@ -13,6 +13,25 @@ use RuntimeException;
 final class ServiceProviderTest extends TestCase
 {
     #[Test]
+    public function is_declared_in_composer_json_for_laravel_package_discovery(): void
+    {
+        $composerJson = json_decode(
+            file_get_contents(__DIR__ . '/../../composer.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+
+        $providers = $composerJson['extra']['laravel']['providers'] ?? [];
+
+        $this->assertContains(AutomaticCrudServiceProvider::class, $providers);
+
+        foreach ($providers as $provider) {
+            $this->assertTrue(class_exists($provider), "Declared provider [$provider] does not exist.");
+            $this->assertTrue(is_subclass_of($provider, LaravelServiceProvider::class));
+        }
+    }
+
+    #[Test]
     public function registers_publishable_config_path(): void
     {
         $published = LaravelServiceProvider::pathsToPublish(AutomaticCrudServiceProvider::class, 'automatic-crud-config');
