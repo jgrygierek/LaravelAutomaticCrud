@@ -130,6 +130,40 @@ final class RequestTraitTest extends TestCase
     }
 
     #[Test]
+    public function apply_request_resolves_request_class_only_once(): void
+    {
+        $controller = new class
+        {
+            use ConfigTrait, RequestTrait;
+
+            public int $requestClassResolutions = 0;
+
+            public function getModelClass(): string
+            {
+                return Item::class;
+            }
+
+            protected function getRequestClass(string $action): ?string
+            {
+                ++$this->requestClassResolutions;
+
+                return null;
+            }
+
+            public function exposeApplyRequest(): Request
+            {
+                return $this->applyRequest();
+            }
+        };
+
+        $first = $controller->exposeApplyRequest();
+        $second = $controller->exposeApplyRequest();
+
+        $this->assertSame($first, $second);
+        $this->assertSame(1, $controller->requestClassResolutions);
+    }
+
+    #[Test]
     public function request_dir_name_pluralizes_model_name(): void
     {
         $this->assertSame('Items', $this->controller->exposeGetRequestDirName(Item::class));

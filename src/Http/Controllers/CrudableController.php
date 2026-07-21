@@ -46,9 +46,8 @@ abstract class CrudableController extends Controller
      */
     public function store(): JsonResponse
     {
-        $model = DB::transaction(fn (): Model => $this->getModelClass()::create(
-            $this->getAllowedRequestValues(),
-        ));
+        $data = $this->getAllowedRequestValues();
+        $model = DB::transaction(fn (): Model => $this->createModel($data));
 
         $this->dispatchEvent(EventAction::Created, $model);
 
@@ -57,9 +56,10 @@ abstract class CrudableController extends Controller
 
     public function show(int|string $id): JsonResource
     {
+        $model = $this->findModel($id);
         $this->validateRequest();
 
-        return $this->getResource($this->findModel($id));
+        return $this->getResource($model);
     }
 
     /**
@@ -67,10 +67,12 @@ abstract class CrudableController extends Controller
      */
     public function update(int|string $id): JsonResource
     {
-        $model = DB::transaction(fn (): Model => tap(
-            $this->findModel($id),
-            fn (Model $model) => $model->update($this->getAllowedRequestValues()),
-        ));
+        $model = DB::transaction(function () use ($id): Model {
+            return $this->updateModel(
+                $this->findModel($id),
+                $this->getAllowedRequestValues(),
+            );
+        });
 
         $this->dispatchEvent(EventAction::Updated, $model);
 
@@ -82,16 +84,35 @@ abstract class CrudableController extends Controller
      */
     public function destroy(int|string $id): Response
     {
-        $this->validateRequest();
+        $model = DB::transaction(function () use ($id): Model {
+            $model = $this->findModel($id);
+            $this->validateRequest();
 
-        $model = DB::transaction(fn (): Model => tap(
-            $this->findModel($id),
-            fn (Model $model) => $model->delete(),
-        ));
+            return $this->deleteModel($model);
+        });
 
         $this->dispatchEvent(EventAction::Deleted, $model);
 
         return response()->noContent();
+    }
+
+    protected function createModel(array $data): Model
+    {
+        return $this->getModelClass()::create($data);
+    }
+
+    protected function updateModel(Model $model, array $data): Model
+    {
+        $model->update($data);
+
+        return $model;
+    }
+
+    protected function deleteModel(Model $model): Model
+    {
+        $model->delete();
+
+        return $model;
     }
 
     protected function validateRequest(): void
