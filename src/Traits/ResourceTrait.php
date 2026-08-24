@@ -21,7 +21,7 @@ trait ResourceTrait
         return $this->getConfig('namespaces.resource');
     }
 
-    private function getResource(Model $object): JsonResource
+    protected function getResource(Model $object): JsonResource
     {
         $resource = $this->getResourceClass();
 

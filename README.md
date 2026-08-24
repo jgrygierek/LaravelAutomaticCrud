@@ -21,6 +21,7 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
         - [Looking up records by a custom key](#looking-up-records-by-a-custom-key)
         - [Skipping global scopes](#skipping-global-scopes)
         - [Customizing persistence](#customizing-persistence)
+        - [Upsert](#upsert)
         - [Filtering with SearchableInterface](#filtering-with-searchableinterface)
     - [Requests](#requests)
         - [Namespace override](#namespace-override-1)
@@ -229,6 +230,28 @@ class OrderController extends CrudableController
 
 If the change goes beyond the persistence step itself (e.g. it also affects which event fires or what's returned), override the whole action (`store()`, `update()`, `destroy()`) instead.
 
+#### Upsert
+
+`upsert(int|string $id)` is not part of `CrudableController` — add it to a specific controller with `UpsertTrait`, then register a route for it manually (it's not part of `Route::apiResource()`):
+
+```php
+use JG\LaravelAutomaticCrud\Traits\UpsertTrait;
+
+class ItemController extends CrudableController
+{
+    use UpsertTrait;
+}
+```
+
+```php
+// routes/api.php
+Route::put('items/{item}', [ItemController::class, 'upsert']);
+```
+
+It looks up a record by the same route key column `show`/`update`/`destroy` use, independently of `createModel()`/`updateModel()`. It responds `200` when it updated an existing record, `201` when it created one, and dispatches the matching `Created` or `Updated` event. Override `upsertModel(int|string $id, array $data): Model` to customize the write.
+
+If the route key column is the (non-fillable) primary key, creating a new record won't force that key to `$id` — mass assignment silently drops it, same as `store()`. Upsert-by-`$id` reliably targets a specific new record only when the route key column is fillable (e.g. a natural key like `slug`).
+
 #### Filtering with `SearchableInterface`
 
 Implement `SearchableInterface` on a model to enable pipeline-based filtering on the `index` endpoint:
@@ -315,6 +338,7 @@ Given `ItemController`, the package looks for form request classes at:
 | show    | `{request_namespace}\{Models}\Show{Model}Request`    | `App\Http\Requests\Items\ShowItemRequest`    |
 | store   | `{request_namespace}\{Models}\Store{Model}Request`   | `App\Http\Requests\Items\StoreItemRequest`   |
 | update  | `{request_namespace}\{Models}\Update{Model}Request`  | `App\Http\Requests\Items\UpdateItemRequest`  |
+| upsert  | `{request_namespace}\{Models}\Upsert{Model}Request`  | `App\Http\Requests\Items\UpsertItemRequest`  |
 | destroy | `{request_namespace}\{Models}\Destroy{Model}Request` | `App\Http\Requests\Items\DestroyItemRequest` |
 
 Form requests are optional by default — if the class does not exist, the standard `request()` is used.
@@ -453,13 +477,13 @@ Priority order (highest to lowest):
 
 Given `ItemController`, the package looks for event classes at:
 
-| Action  | Convention                            | Example                          |
-|---------|----------------------------------------|-----------------------------------|
-| store   | `{event_namespace}\{Model}CreatedEvent` | `App\Events\ItemCreatedEvent`    |
-| update  | `{event_namespace}\{Model}UpdatedEvent` | `App\Events\ItemUpdatedEvent`    |
-| destroy | `{event_namespace}\{Model}DeletedEvent` | `App\Events\ItemDeletedEvent`    |
+| Action  | Convention                              | Example                       |
+|---------|-----------------------------------------|-------------------------------|
+| store   | `{event_namespace}\{Model}CreatedEvent` | `App\Events\ItemCreatedEvent` |
+| update  | `{event_namespace}\{Model}UpdatedEvent` | `App\Events\ItemUpdatedEvent` |
+| destroy | `{event_namespace}\{Model}DeletedEvent` | `App\Events\ItemDeletedEvent` |
 
-Events are optional — if the class does not exist, nothing is dispatched. When it exists, it's instantiated with the affected model and dispatched through Laravel's event dispatcher:
+Events are optional — if the class does not exist, nothing is dispatched. When it exists, it's instantiated with the affected model and dispatched through Laravel's event dispatcher, deferred until the surrounding database transaction commits (via `DB::afterCommit()`) — it never fires if the transaction rolls back:
 
 ```php
 class ItemCreatedEvent

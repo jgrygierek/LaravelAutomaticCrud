@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `src/` — Package source code
     - `Http/Controllers/` — `CrudableController` base class
     - `Http/Interfaces/` — `SearchableInterface`
-    - `Traits/` — `ConfigTrait`, `ModelTrait`, `PaginationTrait`, `RequestTrait`, `ResourceTrait`, `SearchTrait`
+    - `Traits/` — `ConfigTrait`, `ModelTrait`, `PaginationTrait`, `RequestTrait`, `ResourceTrait`, `SearchTrait`, `UpsertTrait`
     - `AutomaticCrudServiceProvider.php` — Service provider
 - `config/` — Publishable config file (`automatic-crud.php`)
 - `tests/` — Test suite
@@ -30,72 +30,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Key Concepts
 
-### CrudableController
-
-Abstract base controller providing `index`, `store`, `show`, `update`, `destroy`. Extend it and optionally override:
-
-- `getModelClass(): string` — return model class (falls back to convention: strips `Controller` suffix, looks up in `model_namespace`)
-- `getModelNamespace(): string` — override model namespace without touching config
-- `getResourceClass(): string` — override resource class entirely, bypassing convention
-- `getResourceCollectionClass(): string` — override collection resource class entirely, bypassing convention
-- `getResourceNamespace(): string` — override resource namespace without touching config
-- `getRequestNamespace(): string` — override form request namespace without touching config
-- `getEventNamespace(): string` — override event namespace without touching config
-- `getEvents(): array` — override the `Action => event class|null` map for specific actions; defaults to `[]`. Actions absent as a key still fall back to the naming convention; an action explicitly mapped to `null` is disabled
-- `modifyQuery(Builder $query): Builder` — customize the query before pagination
-- `withoutGlobalScopes(): array` — global scope classes to exclude from every query the controller builds (`index`, `show`, `update`, `destroy`); defaults to `[]`
-- `defaultIsPaginationEnabled(): bool` — override pagination on/off (defaults to config value)
-- `defaultItemsPerPage(): int` — override per-page count (defaults to config value)
-- `isPaginationOverrideAllowedInQuery(): bool` — whether `?pagination=` query param is respected (defaults to config value)
-- `isPerPageOverrideAllowedInQuery(): bool` — whether `?per_page=` query param is respected (defaults to config value)
-- `createModel(array $data): Model` — persist a new model in `store()`; defaults to `{Model}::create($data)`
-- `updateModel(Model $model, array $data): Model` — persist changes to a model in `update()`; defaults to `$model->update($data)`
-- `deleteModel(Model $model): Model` — delete a model in `destroy()`; defaults to `$model->delete()`
-
-Resources and form requests are resolved by convention, but resource classes can also be overridden via `getResourceClass()` / `getResourceCollectionClass()`:
-
-- Resource: `{resource_namespace}\{ModelName}Resource` (falls back to `JsonResource`)
-- Collection resource: `{resource_namespace}\{ModelName}CollectionResource` (falls back to `{ModelName}Resource`, then `JsonResource`)
-- Form request: `{request_namespace}\{ModelNamePlural}\{Action}{ModelName}Request` (optional — skipped if class doesn't exist)
-- Event: `{event_namespace}\{ModelName}{Action}Event` where `Action` is `Created`, `Updated`, or `Deleted` (optional — skipped if class doesn't exist, dispatched after `store`/`update`/`destroy` with the affected model)
-
-Form request validation is applied inside each action via `RequestTrait::applyRequest()`. For all five CRUD actions this happens automatically.
-For custom actions, validation must be triggered manually or by declaring a `FormRequest` parameter (Laravel's own injection handles it).
-
-`getAllowedRequestValues()` resolves the request via `applyRequest()` and returns `validated()` or `all()`, depending on `requests.only_validated`.
-
-`applyRequest()` memoizes the resolved request on an instance property, so calling it more than once within the same request lifecycle (directly and/or via `getAllowedRequestValues()`/`validateRequest()`) always returns the same instance instead of re-resolving — resolving a `FormRequest` from the container re-runs its validation, so without memoization, calling `applyRequest()` twice would validate twice. This makes it safe to call `applyRequest()` directly for custom logic in a fully overridden action and still use `getAllowedRequestValues()` afterwards without a second validation pass. The cache is an instance property, not `static`, since `static` would leak the resolved request across requests handled by the same PHP process (queue workers, Octane).
-
-`show`, `update`, and `destroy` look up the record via `findModel()` before resolving/validating the request, so a missing record returns `404` regardless of whether the request body would otherwise pass validation or authorization. `store` has no record to look up, so it resolves and validates the request before opening the database transaction that creates the model.
-
-### Pagination & Per-Page Priority
-
-Both settings follow the same priority order (highest to lowest):
-
-1. Query parameter (`?pagination=true/false`, `?per_page=25`)
-2. Controller method (`defaultIsPaginationEnabled()`, `defaultItemsPerPage()`)
-3. Config (`automatic-crud.configs.default.paginate`, `automatic-crud.configs.default.per_page`)
-
-### Custom Configurations
-
-Controllers can override `getConfigName(): string` (defaults to `'default'`) to use a named config from `config/automatic-crud.php`, which overrides default values.
-
-### Sorting
-
-`?sort_by=field` triggers sorting. `?sort_direction=asc|desc` is optional — defaults to `asc` when omitted. 
-Sorting is skipped when the query already has an `orderBy` clause (e.g., applied inside `modifyQuery()`).
-
-### Events
-
-`store`, `update`, and `destroy` dispatch a convention-resolved event with the affected model after the action completes; the event class is optional and skipped when it doesn't exist. Override `getEvents()` to customize or disable specific actions — it merges with the convention on a per-action basis rather than replacing it wholesale. `index` and `show` never dispatch events.
-
-Unlike the convention, a class explicitly mapped in `getEvents()` is not optional: if it doesn't exist, `dispatchEvent()` throws a `RuntimeException` instead of silently skipping it, since a missing class there is a typo/misconfiguration rather than an absent-by-design convention class.
-
-### Searchable Interface
-
-Models implementing `SearchableInterface` must define `searchFilters(): array` returning filter pipeline classes. These are applied automatically in `index`.
-
-`searchFilters()` can return either a flat array of filter classes or a keyed array where each key is a config name. When keyed, the controller's `getConfigName()` selects the matching set; falls back to `default`, then `[]`.
+Feature behavior and usage — `CrudableController` actions and overrides, `UpsertTrait`, pagination/sorting, events, `SearchableInterface`,
+named configurations — is documented in `README.md`; treat it as the source of truth rather than re-describing it here. When behavior changes,
+update `README.md` (and `CHANGELOG.md`), not this section.
 
 ## Tests
 
