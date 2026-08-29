@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JG\LaravelAutomaticCrud\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use JG\LaravelAutomaticCrud\Enums\EventAction;
 use JG\LaravelAutomaticCrud\Tests\Support\Events\ItemCreatedEvent;
@@ -28,6 +29,43 @@ final class EventTraitTest extends TestCase
         $this->makeController(Item::class)->exposeDispatchEvent(EventAction::Created, $item);
 
         Event::assertDispatched(ItemCreatedEvent::class, fn (ItemCreatedEvent $event): bool => $event->model === $item);
+    }
+
+    #[Test]
+    public function defers_dispatch_until_enclosing_transaction_commits(): void
+    {
+        Event::fake();
+
+        $item = $this->createStub(Item::class);
+        $controller = $this->makeController(Item::class);
+
+        DB::transaction(function () use ($controller, $item): void {
+            $controller->exposeDispatchEvent(EventAction::Created, $item);
+
+            Event::assertNotDispatched(ItemCreatedEvent::class);
+        });
+
+        Event::assertDispatched(ItemCreatedEvent::class);
+    }
+
+    #[Test]
+    public function does_not_dispatch_event_when_enclosing_transaction_rolls_back(): void
+    {
+        Event::fake();
+
+        $item = $this->createStub(Item::class);
+        $controller = $this->makeController(Item::class);
+
+        try {
+            DB::transaction(function () use ($controller, $item): void {
+                $controller->exposeDispatchEvent(EventAction::Created, $item);
+
+                throw new RuntimeException('Forced rollback.');
+            });
+        } catch (RuntimeException) {
+        }
+
+        Event::assertNotDispatched(ItemCreatedEvent::class);
     }
 
     #[Test]

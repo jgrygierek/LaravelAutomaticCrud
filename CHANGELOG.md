@@ -2,25 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## 1.1.0
 
 ### Added
 
-- Route binding field support for `show`, `update`, and `destroy`: a route defined with an explicit binding field (e.g. `Route::get('orders/{order:uid}', ...)`) is now looked up by that column instead of the model's route key.
-- Convention-based event dispatching: `store`, `update`, and `destroy` now dispatch `{event_namespace}\{ModelName}CreatedEvent`/`UpdatedEvent`/`DeletedEvent` with the affected model when the class exists. Configurable via `namespaces.event`, overridable via `getEventNamespace()` and, per action, `getEvents()` — which defaults to `[]` and merges with the convention rather than replacing it.
-- `withoutGlobalScopes()` hook: override it to exclude specific global scopes from every query the controller builds (`index`, `show`, `update`, `destroy`). Defaults to `[]`.
-- `createModel()`, `updateModel()`, and `deleteModel()` hooks: `store`, `update`, and `destroy` now delegate the actual write to these protected methods, so side effects can be added around the write without duplicating the surrounding transaction, event dispatch, or response handling.
-
-### Changed
-
-- `CrudableController::findModel()` now applies `modifyQuery()` before looking up a record, so `show`, `update`, and `destroy` respect the same query scoping (e.g. tenant or ownership filters) as `index`.
-- `findModel()` is now `protected` instead of `private`, so it can be overridden in a subclass.
-- `store()` and `update()` now build the resource response after the database transaction commits, instead of inside it.
-- `applyRequest()` now memoizes the resolved request on an instance property. Calling it more than once in the same request lifecycle (directly and/or via `getAllowedRequestValues()`/`validateRequest()`) returns the same instance instead of resolving — and re-validating — a new one.
-- `store()` now resolves and validates the request before opening the database transaction that creates the model, instead of doing so inside it.
-- Named configuration selection is now controlled via `getConfigName(): string` (defaults to `'default'`) instead of the `protected string $configName` property, matching every other override in the package's API. `ConfigTrait` and `SearchTrait` no longer each declare their own copy of the same property.
+- `UpsertTrait` adds an optional `upsert()` action.
 
 ### Fixed
 
-- Registered `AutomaticCrudServiceProvider` under `extra.laravel.providers` in `composer.json`, so Laravel's package auto-discovery actually registers it in consuming applications. It was previously missing, meaning config merging, config validation, and `vendor:publish` never ran outside this repo's own test suite (which registers the provider manually via Testbench).
-- `dispatchEvent()` now throws a `RuntimeException` when a class explicitly mapped in `getEvents()` doesn't exist, instead of silently dispatching nothing. Only the naming-convention fallback is optional; an explicit override is a programmer error if the class is missing.
+- Convention-based events are now dispatched after the enclosing transaction commits, instead of possibly before an outer transaction finishes.
+
+## 1.0.0 (2026-08-25)
+
+### Added
+
+- Route binding field support for `show`, `update`, and `destroy`.
+- Convention-based event dispatching for `store`, `update`, and `destroy`, with `getEventNamespace()`/`getEvents()` overrides.
+- `withoutGlobalScopes()` hook.
+- `createModel()`, `updateModel()`, and `deleteModel()` persistence hooks.
+
+### Changed
+
+- `findModel()` now applies `modifyQuery()`, so `show`, `update`, and `destroy` respect the same query scoping as `index`.
+- `findModel()` is now `protected` instead of `private`.
+- `store()` and `update()` now build the resource response after the database transaction commits.
+- `applyRequest()` now memoizes the resolved request, so resolving it more than once no longer re-validates it.
+- `store()` now resolves and validates the request before opening the database transaction.
+- Named configuration selection is now controlled via `getConfigName()` instead of the `$configName` property.
+
+### Fixed
+
+- `AutomaticCrudServiceProvider` is now registered under `extra.laravel.providers` in `composer.json`, so Laravel's package auto-discovery picks it up.
+- `dispatchEvent()` now throws when a class explicitly mapped in `getEvents()` doesn't exist, instead of silently skipping it.

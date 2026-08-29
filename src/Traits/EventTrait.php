@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JG\LaravelAutomaticCrud\Traits;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use JG\LaravelAutomaticCrud\Enums\EventAction;
 use RuntimeException;
 
@@ -42,7 +43,7 @@ trait EventTrait
         }
 
         if ($class) {
-            event(new $class($model));
+            DB::afterCommit(static fn () => event(new $class($model)));
         }
     }
 
