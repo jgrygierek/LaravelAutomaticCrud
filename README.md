@@ -11,32 +11,33 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
 ## Table of Contents
 
 - [Installation](#installation)
-- [Usage](#usage)
-    - [Controllers](#controllers)
-        - [Creating a controller](#creating-a-controller)
-        - [Namespace override](#namespace-override)
-        - [Model class override](#model-class-override)
-        - [Pagination and sorting](#pagination-and-sorting)
-        - [Customizing the query](#customizing-the-query)
-        - [Looking up records by a custom key](#looking-up-records-by-a-custom-key)
-        - [Skipping global scopes](#skipping-global-scopes)
-        - [Customizing persistence](#customizing-persistence)
-        - [Upsert](#upsert)
-        - [Filtering with SearchableInterface](#filtering-with-searchableinterface)
-    - [Requests](#requests)
-        - [Namespace override](#namespace-override-1)
-        - [Request class convention](#request-class-convention)
-        - [Force custom requests](#force-custom-requests)
-        - [Only validated fields](#only-validated-fields)
-        - [Reusing an already-resolved request](#reusing-an-already-resolved-request)
-    - [Resources](#resources)
-        - [Namespace override](#namespace-override-2)
-        - [Resource class convention](#resource-class-convention)
-        - [Resource class override](#resource-class-override)
-    - [Events](#events)
-        - [Namespace override](#namespace-override-3)
-        - [Event class convention](#event-class-convention)
-        - [Event class override](#event-class-override)
+- [Controllers](#controllers)
+    - [Creating a controller](#creating-a-controller)
+    - [Namespace override](#namespace-override)
+    - [Model class override](#model-class-override)
+    - [Pagination and sorting](#pagination-and-sorting)
+    - [Customizing the query](#customizing-the-query)
+    - [Looking up records by a custom key](#looking-up-records-by-a-custom-key)
+    - [Skipping global scopes](#skipping-global-scopes)
+    - [Customizing persistence](#customizing-persistence)
+    - [Filtering with SearchableInterface](#filtering-with-searchableinterface)
+- [Actions](#actions)
+    - [Upsert](#upsert)
+    - [Export](#export)
+- [Requests](#requests)
+    - [Namespace override](#namespace-override-1)
+    - [Request class convention](#request-class-convention)
+    - [Force custom requests](#force-custom-requests)
+    - [Only validated fields](#only-validated-fields)
+    - [Reusing an already-resolved request](#reusing-an-already-resolved-request)
+- [Resources](#resources)
+    - [Namespace override](#namespace-override-2)
+    - [Resource class convention](#resource-class-convention)
+    - [Resource class override](#resource-class-override)
+- [Events](#events)
+    - [Namespace override](#namespace-override-3)
+    - [Event class convention](#event-class-convention)
+    - [Event class override](#event-class-override)
 - [Configuration](#configuration)
     - [Custom configurations](#custom-configurations)
 - [Development](#development)
@@ -55,11 +56,9 @@ Laravel auto-discovers the service provider. Optionally publish the config file:
 php artisan vendor:publish --tag=automatic-crud-config
 ```
 
-## Usage
+## Controllers
 
-### Controllers
-
-#### Creating a controller
+### Creating a controller
 
 Extend `CrudableController` and define a route resource. The controller resolves the model, form request, and resource classes by convention.
 
@@ -77,9 +76,7 @@ class ItemController extends CrudableController
 Route::apiResource('items', ItemController::class);
 ```
 
----
-
-#### Namespace override
+### Namespace override
 
 Override `getModelNamespace()` in the controller to resolve the model from a different namespace without touching the config:
 
@@ -100,7 +97,7 @@ Priority order (highest to lowest):
 3. Config default (`namespaces.model`)
 4. Hardcoded fallback (`App\Models`)
 
-#### Model class override
+### Model class override
 
 Override `getModelClass()` to bypass both the namespace method and the naming convention entirely:
 
@@ -114,7 +111,7 @@ class ItemController extends CrudableController
 }
 ```
 
-#### Pagination and sorting
+### Pagination and sorting
 
 **Pagination** is enabled by default and returns 10 items per page wrapped in `{ data, links, meta }`. Disable it to get a plain `{ data }` array.
 
@@ -163,7 +160,7 @@ Priority order (highest to lowest) for both pagination and per-page:
 2. Controller method override (`defaultIsPaginationEnabled()`, `defaultItemsPerPage()`)
 3. Config value (`pagination.paginate`, `pagination.per_page`)
 
-#### Customizing the query
+### Customizing the query
 
 Override `modifyQuery()` to apply additional constraints before pagination:
 
@@ -179,7 +176,7 @@ class ItemController extends CrudableController
 
 `modifyQuery()` is also applied when `show`, `update`, and `destroy` look up a record, so scoping such as multi-tenancy or ownership filters is enforced consistently everywhere, not just on `index`.
 
-#### Looking up records by a custom key
+### Looking up records by a custom key
 
 `show`, `update`, and `destroy` look up the record by the model's route key (`getRouteKeyName()`, which falls back to the primary key by default). To look up by a different column on a specific route — without changing the model globally — use Laravel's route binding field syntax:
 
@@ -194,7 +191,7 @@ The controller keeps the usual `show(int|string $id)` signature — the `uid` se
 
 `findModel()` is `protected`, so it can be overridden entirely if the lookup logic above doesn't fit (e.g. querying across multiple tables).
 
-#### Skipping global scopes
+### Skipping global scopes
 
 `index`, `show`, `update`, and `destroy` all apply any global scopes registered on the model. Override `withoutGlobalScopes()` to exclude specific global scopes across all four:
 
@@ -210,7 +207,7 @@ class OrderController extends CrudableController
 
 Applies uniformly everywhere the model is queried — there's no per-action opt-out. Defaults to `[]` (no scopes skipped).
 
-#### Customizing persistence
+### Customizing persistence
 
 `store`, `update`, and `destroy` delegate the actual write to `createModel()`, `updateModel()`, and `deleteModel()`. Override any of them to add side effects around the write, without duplicating the surrounding transaction, event dispatch, or response handling:
 
@@ -230,29 +227,7 @@ class OrderController extends CrudableController
 
 If the change goes beyond the persistence step itself (e.g. it also affects which event fires or what's returned), override the whole action (`store()`, `update()`, `destroy()`) instead.
 
-#### Upsert
-
-`upsert(int|string $id)` is not part of `CrudableController` — add it to a specific controller with `UpsertTrait`, then register a route for it manually (it's not part of `Route::apiResource()`):
-
-```php
-use JG\LaravelAutomaticCrud\Traits\UpsertTrait;
-
-class ItemController extends CrudableController
-{
-    use UpsertTrait;
-}
-```
-
-```php
-// routes/api.php
-Route::put('items/{item}', [ItemController::class, 'upsert']);
-```
-
-It looks up a record by the same route key column `show`/`update`/`destroy` use, independently of `createModel()`/`updateModel()`. It responds `200` when it updated an existing record, `201` when it created one, and dispatches the matching `Created` or `Updated` event. Override `upsertModel(int|string $id, array $data): Model` to customize the write.
-
-If the route key column is the (non-fillable) primary key, creating a new record won't force that key to `$id` — mass assignment silently drops it, same as `store()`. Upsert-by-`$id` reliably targets a specific new record only when the route key column is fillable (e.g. a natural key like `slug`).
-
-#### Filtering with `SearchableInterface`
+### Filtering with `SearchableInterface`
 
 Implement `SearchableInterface` on a model to enable pipeline-based filtering on the `index` endpoint:
 
@@ -284,7 +259,7 @@ class ActiveFilter
 }
 ```
 
-##### Config-keyed filters
+#### Config-keyed filters
 
 `searchFilters()` can also return a keyed array to provide different filter sets per named configuration. The key matches the controller's `getConfigName()`; `default` is used as a fallback when no matching key is found:
 
@@ -303,11 +278,92 @@ class Item extends Model implements SearchableInterface
 
 A controller overriding `getConfigName()` to return `'api'` will get `[ActiveFilter::class, NameFilter::class]`, while all others fall back to `[NameFilter::class]`.
 
----
+## Actions
 
-### Requests
+`CrudableController` provides the actions registered by `Route::apiResource()`. Additional actions are opt-in via traits and need their own routes.
 
-#### Namespace override
+| Action    | Method      | Route              | Response                | Event                  | Source               |
+|-----------|-------------|--------------------|-------------------------|------------------------|----------------------|
+| `index`   | `GET`       | `/items`           | `200` collection        | —                      | `CrudableController` |
+| `store`   | `POST`      | `/items`           | `201` resource          | `Created`              | `CrudableController` |
+| `show`    | `GET`       | `/items/{item}`    | `200` resource          | —                      | `CrudableController` |
+| `update`  | `PUT/PATCH` | `/items/{item}`    | `200` resource          | `Updated`              | `CrudableController` |
+| `destroy` | `DELETE`    | `/items/{item}`    | `204` no content        | `Deleted`              | `CrudableController` |
+| `upsert`  | `PUT`       | `/items/{item}`    | `200`/`201` resource    | `Updated`/`Created`    | `UpsertTrait`        |
+| `export`  | `GET`       | `/items/export`    | `200` CSV download      | —                      | `ExportTrait`        |
+
+Every action resolves its form request by convention (see [Request class convention](#request-class-convention)). `store`, `update`, `destroy`, and `upsert` run inside a database transaction.
+
+### Upsert
+
+`upsert(int|string $id)` is not part of `CrudableController` — add it to a specific controller with `UpsertTrait`, then register a route for it manually (it's not part of `Route::apiResource()`):
+
+```php
+use JG\LaravelAutomaticCrud\Traits\UpsertTrait;
+
+class ItemController extends CrudableController
+{
+    use UpsertTrait;
+}
+```
+
+```php
+// routes/api.php
+Route::put('items/{item}', [ItemController::class, 'upsert']);
+```
+
+It looks up a record by the same route key column `show`/`update`/`destroy` use, independently of `createModel()`/`updateModel()`. It responds `200` when it updated an existing record, `201` when it created one, and dispatches the matching `Created` or `Updated` event. Override `upsertModel(int|string $id, array $data): Model` to customize the write.
+
+If the route key column is the (non-fillable) primary key, creating a new record won't force that key to `$id` — mass assignment silently drops it, same as `store()`. Upsert-by-`$id` reliably targets a specific new record only when the route key column is fillable (e.g. a natural key like `slug`).
+
+### Export
+
+`export()` is not part of `CrudableController` — add it to a specific controller with `ExportTrait`, then register a route for it manually (before `Route::apiResource()`, so `items/export` isn't matched by `show`):
+
+```php
+use JG\LaravelAutomaticCrud\Traits\ExportTrait;
+
+class ItemController extends CrudableController
+{
+    use ExportTrait;
+}
+```
+
+```php
+// routes/api.php
+Route::get('items/export', [ItemController::class, 'export']);
+```
+
+It streams a CSV download (`items.csv`, UTF-8, `\r\n` line endings per RFC 4180) of every matching record, built from the same query as `index` — `SearchableInterface` filters, `modifyQuery()`, `withoutGlobalScopes()`, and `?sort_by`/`?sort_direction` all apply, but pagination doesn't.
+
+Records are fetched from the database in chunks of `export.chunk_size` (5 000 by default) and appended to the same file, so memory usage stays flat regardless of the total. Unsorted queries are chunked by primary key (`WHERE id > ?`, via `lazyById()`), so every chunk is equally fast regardless of table size — existing `where` clauses are grouped first, so an ungrouped `orWhere()` in `modifyQuery()` or a filter can't bypass the key condition; sorted queries (`?sort_by` or an `orderBy` in `modifyQuery()`) are chunked by `OFFSET`, with the primary key appended to the sort order so chunks never skip or repeat records. If `modifyQuery()` joins other tables, select the model's columns explicitly (e.g. `->select('items.*')`) — otherwise a joined table's `id` can overwrite the model's key and break chunking. Override `getExportChunkSize(): int` in the controller to use a different chunk size for that controller. The first chunk is fetched before the response starts, so a failing query still returns an error status instead of an empty `200` download.
+
+Each row is the model resolved to an array through `{Model}ExportResource` (see [Resource class convention](#resource-class-convention)). Unlike the other resources it has no fallback: the class is checked on every export, even when nothing matches, and if it's missing a `RuntimeException` is thrown before the download starts, rather than silently exporting a shape built for the API. To export without one, override `getResourceExportClass()` (e.g. return `JsonResource::class`). The keys of the first row become the CSV header. Later rows are aligned to that header: missing keys are written as empty cells and keys not in the header are dropped. Booleans are written as `1`/`0`, backed enums as their value, pure enums as their name, and other arrays and non-`Stringable` objects as JSON. When nothing matches, the file is empty.
+
+Override `getExportHeader(array $row): array` to set the header yourself. By default it returns the keys of the first row (or `[]` when nothing matches, which leaves the file empty). Return a list of row keys (`['id', 'name']`), or a map of row keys to column labels (`['id' => 'ID', 'name' => 'Name']`). The header defines both the set and the order of exported columns: row values are written in header order, header keys missing from a row become empty cells, and row keys missing from the header are dropped. A non-empty header is written even when nothing matches.
+
+Override `getExportFileName(): string` to change the file name, or `getExportRow(Model $model, Request $request): array` to build rows without a resource. The export resource is still required in that case, so also override `getResourceExportClass()` unless `{Model}ExportResource` exists:
+
+```php
+class ItemController extends CrudableController
+{
+    use ExportTrait;
+
+    protected function getResourceExportClass(): string
+    {
+        return JsonResource::class;
+    }
+
+    protected function getExportRow(Model $model, Request $request): array
+    {
+        return ['id' => $model->id, 'name' => $model->name];
+    }
+}
+```
+
+## Requests
+
+### Namespace override
 
 Override `getRequestNamespace()` in the controller to resolve form requests from a different namespace without touching the config:
 
@@ -328,7 +384,7 @@ Priority order (highest to lowest):
 3. Config default (`namespaces.request`)
 4. Hardcoded fallback (`App\Http\Requests`)
 
-#### Request class convention
+### Request class convention
 
 Given `ItemController`, the package looks for form request classes at:
 
@@ -340,12 +396,13 @@ Given `ItemController`, the package looks for form request classes at:
 | update  | `{request_namespace}\{Models}\Update{Model}Request`  | `App\Http\Requests\Items\UpdateItemRequest`  |
 | upsert  | `{request_namespace}\{Models}\Upsert{Model}Request`  | `App\Http\Requests\Items\UpsertItemRequest`  |
 | destroy | `{request_namespace}\{Models}\Destroy{Model}Request` | `App\Http\Requests\Items\DestroyItemRequest` |
+| export  | `{request_namespace}\{Models}\Export{Model}Request`  | `App\Http\Requests\Items\ExportItemRequest`  |
 
 Form requests are optional by default — if the class does not exist, the standard `request()` is used.
 
 For `show`, `update`, and `destroy`, the record is looked up via `findModel()` before the form request is resolved and validated, so a missing record always returns `404` regardless of the request body or authorization outcome.
 
-#### Force custom requests
+### Force custom requests
 
 Set `requests.force_custom` to `true` to throw a `RuntimeException` when a request class is missing instead of silently falling back:
 
@@ -356,7 +413,7 @@ Set `requests.force_custom` to `true` to throw a `RuntimeException` when a reque
 ],
 ```
 
-#### Only validated fields
+### Only validated fields
 
 Set `requests.only_validated` to `true` (requires `force_custom` to also be `true`) to pass only `$request->validated()` fields to `create()` / `update()`, even
 when the form request class is not a `FormRequest`:
@@ -369,7 +426,7 @@ when the form request class is not a `FormRequest`:
 ],
 ```
 
-#### Reusing an already-resolved request
+### Reusing an already-resolved request
 
 `applyRequest()` memoizes the resolved request for the lifetime of the controller instance, so calling it more than once — directly and/or via `getAllowedRequestValues()`/`validateRequest()` — always returns the same instance instead of resolving (and re-validating) a new one. This makes it safe to resolve the request yourself for custom logic in a fully overridden action, and still use `getAllowedRequestValues()` afterwards:
 
@@ -392,11 +449,9 @@ class UserController extends CrudableController
 }
 ```
 
----
+## Resources
 
-### Resources
-
-#### Namespace override
+### Namespace override
 
 Override `getResourceNamespace()` in the controller to resolve resources from a different namespace without touching the config:
 
@@ -417,21 +472,22 @@ Priority order (highest to lowest):
 3. Config default (`namespaces.resource`)
 4. Hardcoded fallback (`App\Http\Resources`)
 
-#### Resource class convention
+### Resource class convention
 
 Given `ItemController`, the package looks for resource classes at:
 
-| Type                | Convention                                       | Example                                     |
-|---------------------|--------------------------------------------------|---------------------------------------------|
-| Resource            | `{resource_namespace}\{Model}Resource`           | `App\Http\Resources\ItemResource`           |
-| Collection resource | `{resource_namespace}\{Model}CollectionResource` | `App\Http\Resources\ItemCollectionResource` |
+| Type                | Used by                                    | Convention                                       | Example                                     |
+|---------------------|--------------------------------------------|--------------------------------------------------|---------------------------------------------|
+| Resource            | `show`, `store`, `update`, `upsert`        | `{resource_namespace}\{Model}Resource`           | `App\Http\Resources\ItemResource`           |
+| Collection resource | `index` (applied to each record)           | `{resource_namespace}\{Model}CollectionResource` | `App\Http\Resources\ItemCollectionResource` |
+| Export resource     | `export` (applied to each record)          | `{resource_namespace}\{Model}ExportResource`     | `App\Http\Resources\ItemExportResource`     |
 
 If `{Model}Resource` is not found, `JsonResource` is used as a fallback. If `{Model}CollectionResource` is not found, it falls back to `{Model}Resource`, then
-`JsonResource`.
+`JsonResource`. `{Model}ExportResource` has no fallback — a `RuntimeException` is thrown when it's missing.
 
-#### Resource class override
+### Resource class override
 
-Override `getResourceClass()` or `getResourceCollectionClass()` to bypass the namespace method and naming convention entirely:
+Override `getResourceClass()`, `getResourceCollectionClass()`, or `getResourceExportClass()` to bypass the namespace method and naming convention entirely:
 
 ```php
 class ItemController extends CrudableController
@@ -445,14 +501,17 @@ class ItemController extends CrudableController
     {
         return CustomItemCollectionResource::class;
     }
+
+    protected function getResourceExportClass(): string
+    {
+        return CustomItemExportResource::class;
+    }
 }
 ```
 
----
+## Events
 
-### Events
-
-#### Namespace override
+### Namespace override
 
 Override `getEventNamespace()` in the controller to resolve events from a different namespace without touching the config:
 
@@ -473,7 +532,7 @@ Priority order (highest to lowest):
 3. Config default (`namespaces.event`)
 4. Hardcoded fallback (`App\Events`)
 
-#### Event class convention
+### Event class convention
 
 Given `ItemController`, the package looks for event classes at:
 
@@ -492,9 +551,9 @@ class ItemCreatedEvent
 }
 ```
 
-`index` and `show` never dispatch events.
+`index`, `show`, and `export` never dispatch events.
 
-#### Event class override
+### Event class override
 
 Override `getEvents()` to control exactly which event class is dispatched for specific actions. It defaults to an empty array — any action *not* present as a key still falls back to the naming convention. An action mapped explicitly to `null` is disabled, bypassing the convention entirely:
 
@@ -514,8 +573,6 @@ class ItemController extends CrudableController
 In the example above, `store` dispatches `CustomItemCreatedEvent` instead of the convention class, `destroy` dispatches nothing, and `update` is untouched — it still resolves `ItemUpdatedEvent` by convention, since `'Updated'` isn't a key in the array.
 
 Unlike the convention (which silently skips a missing class), a class mapped explicitly in `getEvents()` must exist — a typo or a class that was renamed/removed throws a `RuntimeException` instead of silently dispatching nothing.
-
----
 
 ## Configuration
 
@@ -539,6 +596,9 @@ return [
             'requests' => [
                 'force_custom'   => false,
                 'only_validated' => false,
+            ],
+            'export' => [
+                'chunk_size' => 5000,
             ],
         ],
         'api' => [
