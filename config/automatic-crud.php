@@ -21,6 +21,9 @@ return [
                 'force_custom' => false,
                 'only_validated' => false,
             ],
+            'export' => [
+                'chunk_size' => 5000,
+            ],
         ],
     ],
 ];

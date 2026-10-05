@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Pipeline;
+use JG\LaravelAutomaticCrud\Enums\SortDirection;
 use JG\LaravelAutomaticCrud\Http\Interfaces\SearchableInterface;
 
 trait SearchTrait
@@ -78,8 +79,8 @@ trait SearchTrait
     {
         if ($this->canAddSorting($query, $request)) {
             $query->orderBy(
-                $request->input('sort_by', 'id'),
-                $request->input('sort_direction', 'asc'),
+                $request->input('sort_by'),
+                $request->input('sort_direction', SortDirection::Asc->value),
             );
         }
 

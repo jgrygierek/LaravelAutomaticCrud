@@ -35,6 +35,7 @@ trait ConfigTrait
             'namespaces.event' => 'App\Events',
             'pagination.paginate', 'pagination.allow_pagination_override', 'pagination.allow_per_page_override' => true,
             'pagination.per_page' => 10,
+            'export.chunk_size' => 5000,
             default => null,
         };
     }

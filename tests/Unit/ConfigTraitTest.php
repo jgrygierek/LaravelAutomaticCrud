@@ -49,6 +49,7 @@ final class ConfigTraitTest extends TestCase
         yield 'pagination.allow_per_page_override' => ['pagination.allow_per_page_override', true];
         yield 'requests.only_validated' => ['requests.only_validated', false];
         yield 'requests.force_custom' => ['requests.force_custom', false];
+        yield 'export.chunk_size' => ['export.chunk_size', 5000];
     }
 
     #[Test]

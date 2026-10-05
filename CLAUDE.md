@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `src/` — Package source code
     - `Http/Controllers/` — `CrudableController` base class
     - `Http/Interfaces/` — `SearchableInterface`
-    - `Traits/` — `ConfigTrait`, `ModelTrait`, `PaginationTrait`, `RequestTrait`, `ResourceTrait`, `SearchTrait`, `UpsertTrait`
+    - `Traits/` — `ConfigTrait`, `EventTrait`, `ExportTrait`, `ModelTrait`, `PaginationTrait`, `RequestTrait`, `ResourceTrait`, `SearchTrait`, `UpsertTrait`
     - `AutomaticCrudServiceProvider.php` — Service provider
 - `config/` — Publishable config file (`automatic-crud.php`)
 - `tests/` — Test suite
@@ -42,6 +42,7 @@ When adding new tests:
 
 - Feature tests go in `tests/Feature/`, unit tests in `tests/Unit/`
 - Support classes (models, controllers, resources) go in `tests/Support/`
+- A controller override needed by a single test goes inline as an anonymous subclass of a shared support controller, bound with `$this->app->instance()`, instead of a new support class
 - Follow the order: success → not found → validation error
 - Use `assertJsonCount`, `assertJsonPath`, `assertDatabaseHas`, `assertDatabaseMissing`
 - No comments inside test files — test method names must be self-explanatory
