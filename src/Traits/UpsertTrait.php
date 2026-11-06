@@ -29,6 +29,7 @@ trait UpsertTrait
      */
     public function upsert(int|string $id): JsonResponse
     {
+        $id = last(func_get_args());
         $data = $this->getAllowedRequestValues();
         $model = DB::transaction(fn (): Model => $this->upsertModel($id, $data));
 

@@ -56,7 +56,7 @@ abstract class CrudableController extends Controller
 
     public function show(int|string $id): JsonResource
     {
-        $model = $this->findModel($id);
+        $model = $this->findModel(last(func_get_args()));
         $this->validateRequest();
 
         return $this->getResource($model);
@@ -67,6 +67,7 @@ abstract class CrudableController extends Controller
      */
     public function update(int|string $id): JsonResource
     {
+        $id = last(func_get_args());
         $model = DB::transaction(function () use ($id): Model {
             return $this->updateModel(
                 $this->findModel($id),
@@ -84,6 +85,7 @@ abstract class CrudableController extends Controller
      */
     public function destroy(int|string $id): Response
     {
+        $id = last(func_get_args());
         $model = DB::transaction(function () use ($id): Model {
             $model = $this->findModel($id);
             $this->validateRequest();
