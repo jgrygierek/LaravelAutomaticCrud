@@ -189,6 +189,8 @@ Route::delete('orders/{order:uid}', [OrderController::class, 'destroy']);
 
 The controller keeps the usual `show(int|string $id)` signature — the `uid` segment is resolved automatically from the route definition. Routes without an explicit binding field keep using the model's route key.
 
+In nested routes (e.g. `users/{user}/posts/{post}`) the record is identified by the last route parameter, so `$id` passed to `findModel()`/`upsertModel()` is the `{post}` value. Parent parameters are not used to constrain the lookup — scope it in `modifyQuery()` if needed. When overriding an action, forward all arguments with `parent::show(...func_get_args())` — `parent::show($id)` would pass only the parent value.
+
 `findModel()` is `protected`, so it can be overridden entirely if the lookup logic above doesn't fit (e.g. querying across multiple tables).
 
 ### Skipping global scopes
