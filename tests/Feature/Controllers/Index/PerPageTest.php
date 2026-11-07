@@ -8,6 +8,7 @@ use JG\LaravelAutomaticCrud\Tests\Feature\CrudTestCase;
 use JG\LaravelAutomaticCrud\Tests\Support\Controllers\CustomPerPageController;
 use JG\LaravelAutomaticCrud\Tests\Support\Controllers\ItemController;
 use JG\LaravelAutomaticCrud\Tests\Support\Controllers\Pagination\PerPageOverrideOffController;
+use JG\LaravelAutomaticCrud\Tests\Support\Controllers\PreparedPaginationController;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -19,6 +20,7 @@ final class PerPageTest extends CrudTestCase
         $router->get('/items', [ItemController::class, 'index']);
         $router->get('/items-per-page-3', [CustomPerPageController::class, 'index']);
         $router->get('/items-per-page-override-off', [PerPageOverrideOffController::class, 'index']);
+        $router->get('/items-prepared-pagination', [PreparedPaginationController::class, 'index']);
     }
 
     #[Test]
@@ -43,6 +45,136 @@ final class PerPageTest extends CrudTestCase
             ->assertOk()
             ->assertJsonCount(4, 'data')
             ->assertJsonPath('meta.per_page', 4);
+    }
+
+    #[Test]
+    public function per_page_query_param_is_clamped_to_default_max(): void
+    {
+        Item::factory()->count(3)->create();
+
+        $this->getJson('/items?per_page=1000000')
+            ->assertOk()
+            ->assertJsonPath('meta.per_page', 100);
+    }
+
+    #[Test]
+    public function per_page_query_param_is_clamped_to_configured_max(): void
+    {
+        config(['automatic-crud.configs.default.pagination.max_per_page' => 5]);
+
+        Item::factory()->count(10)->create();
+
+        $this->getJson('/items?per_page=8')
+            ->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonPath('meta.per_page', 5);
+    }
+
+    #[Test]
+    public function per_page_query_param_is_clamped_to_max_from_controller_method(): void
+    {
+        $this->app->instance(CustomPerPageController::class, new class extends CustomPerPageController
+        {
+            protected function maxItemsPerPage(): int
+            {
+                return 4;
+            }
+        });
+
+        Item::factory()->count(10)->create();
+
+        $this->getJson('/items-per-page-3?per_page=8')
+            ->assertOk()
+            ->assertJsonCount(4, 'data')
+            ->assertJsonPath('meta.per_page', 4);
+    }
+
+    #[Test]
+    public function per_page_query_param_equal_to_max_is_accepted(): void
+    {
+        config(['automatic-crud.configs.default.pagination.max_per_page' => 5]);
+
+        Item::factory()->count(10)->create();
+
+        $this->getJson('/items?per_page=5')
+            ->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonPath('meta.per_page', 5);
+    }
+
+    #[Test]
+    public function per_page_query_param_is_clamped_to_one_when_max_is_zero(): void
+    {
+        config(['automatic-crud.configs.default.pagination.max_per_page' => 0]);
+
+        Item::factory()->count(3)->create();
+
+        $this->getJson('/items?per_page=2')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('meta.per_page', 1);
+    }
+
+    #[Test]
+    public function default_per_page_is_not_clamped_to_max(): void
+    {
+        config([
+            'automatic-crud.configs.default.pagination.per_page' => 8,
+            'automatic-crud.configs.default.pagination.max_per_page' => 5,
+        ]);
+
+        Item::factory()->count(10)->create();
+
+        $this->getJson('/items')
+            ->assertOk()
+            ->assertJsonCount(8, 'data')
+            ->assertJsonPath('meta.per_page', 8);
+    }
+
+    #[Test]
+    public function per_page_uses_value_prepared_by_form_request(): void
+    {
+        Item::factory()->count(10)->create();
+
+        $this->getJson('/items-prepared-pagination?limit=4')
+            ->assertOk()
+            ->assertJsonCount(4, 'data')
+            ->assertJsonPath('meta.per_page', 4);
+    }
+
+    #[Test]
+    public function page_uses_value_prepared_by_form_request(): void
+    {
+        Item::factory()->count(10)->create();
+
+        $this->getJson('/items-prepared-pagination?limit=4&p=3')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.current_page', 3);
+    }
+
+    #[Test]
+    public function pagination_uses_value_prepared_by_form_request(): void
+    {
+        Item::factory()->count(15)->create();
+
+        $this->getJson('/items-prepared-pagination?all')
+            ->assertOk()
+            ->assertJsonCount(15, 'data')
+            ->assertJsonMissingPath('meta');
+    }
+
+    #[Test]
+    public function default_per_page_zero_is_clamped_to_one(): void
+    {
+        config(['automatic-crud.configs.default.pagination.per_page' => 0]);
+
+        Item::factory()->count(3)->create();
+
+        $this->getJson('/items')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('meta.per_page', 1);
     }
 
     #[Test]

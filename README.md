@@ -143,7 +143,7 @@ Supported query parameters:
 | Parameter         | Values          | Default | Description                  |
 |-------------------|-----------------|---------|------------------------------|
 | `?pagination`     | `true`, `false` | `true`  | Enable or disable pagination |
-| `?per_page`       | integer         | `10`    | Number of items per page     |
+| `?per_page`       | integer         | `10`    | Items per page (max `100`)   |
 | `?sort_by`        | column name     | —       | Column to sort by            |
 | `?sort_direction` | `asc`, `desc`   | `asc`   | Sort direction               |
 
@@ -160,6 +160,11 @@ class ItemController extends CrudableController
     protected function defaultItemsPerPage(): int
     {
         return 25;
+    }
+
+    protected function maxItemsPerPage(): int
+    {
+        return 50;
     }
 
     protected function isPaginationOverrideAllowedInQuery(): bool
@@ -179,6 +184,12 @@ Priority order (highest to lowest) for both pagination and per-page:
 1. Query parameter (`?pagination=`, `?per_page=`)
 2. Controller method override (`defaultIsPaginationEnabled()`, `defaultItemsPerPage()`)
 3. Config value (`pagination.paginate`, `pagination.per_page`)
+
+`maxItemsPerPage()` (config `pagination.max_per_page`) caps only `?per_page`. The defaults above are not capped.
+
+`?pagination=false` returns all items; disable it with `pagination.allow_pagination_override` to enforce the cap.
+
+Pagination reads its query parameters from the resolved `index` request, so values set in its `prepareForValidation()` apply.
 
 ### Customizing the query
 
@@ -612,6 +623,7 @@ return [
             'pagination' => [
                 'paginate'                  => true,
                 'per_page'                  => 10,
+                'max_per_page'              => 100,
                 'allow_pagination_override' => true,
                 'allow_per_page_override'   => true,
             ],
