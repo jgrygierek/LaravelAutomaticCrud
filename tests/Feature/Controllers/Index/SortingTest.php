@@ -40,5 +40,21 @@ final class SortingTest extends CrudTestCase
             '/items?sort_by=name',
             ['Alpha', 'Beta', 'Gamma'],
         ];
+        yield 'descending case-insensitively' => [
+            '/items?sort_by=name&sort_direction=DESC',
+            ['Gamma', 'Beta', 'Alpha'],
+        ];
+        yield 'ascending when direction is invalid' => [
+            '/items?sort_by=name&sort_direction=sideways',
+            ['Alpha', 'Beta', 'Gamma'],
+        ];
+        yield 'ascending when direction is an array' => [
+            '/items?sort_by=name&sort_direction[]=desc',
+            ['Alpha', 'Beta', 'Gamma'],
+        ];
+        yield 'unsorted when sort column is an array' => [
+            '/items?sort_by[]=name&sort_direction=desc',
+            ['Beta', 'Alpha', 'Gamma'],
+        ];
     }
 }

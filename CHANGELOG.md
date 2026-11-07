@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- `SortingRulesHelper::rules()` returns validation rules restricting `sort_by` and `sort_direction`.
+
 ### Fixed
 
 - `show`, `update`, `destroy`, and `upsert` in nested routes now look up the record by the last route parameter instead of the first one.
 - `applyRequest()` no longer returns a request memoized during an earlier request when the controller instance is reused.
+- An invalid `sort_direction` falls back to `asc` and a non-string `sort_by` is ignored, instead of failing with `500`.
 
 ## 1.2.0
 
