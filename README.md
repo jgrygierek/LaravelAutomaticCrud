@@ -115,8 +115,28 @@ class ItemController extends CrudableController
 
 **Pagination** is enabled by default and returns 10 items per page wrapped in `{ data, links, meta }`. Disable it to get a plain `{ data }` array.
 
-**Sorting** is triggered by `?sort_by=<field>`. Direction defaults to `asc` when omitted. Sorting is skipped when the query already has an `orderBy` (e.g.
+**Sorting** is triggered by `?sort_by=<field>`. Direction defaults to `asc` when omitted or invalid. A non-string `sort_by` is ignored. Sorting is skipped when the query already has an `orderBy` (e.g.
 applied inside `modifyQuery()`).
+
+`sort_by` accepts any column name, including hidden ones, and an unknown column fails at the database level. Restrict it in the `index` request (see
+[Request class convention](#request-class-convention)) to get a `422` instead. `SortingRulesHelper::rules()` returns the rules for both parameters:
+
+```php
+use JG\LaravelAutomaticCrud\Helpers\SortingRulesHelper;
+
+class IndexItemRequest extends FormRequest
+{
+    public function rules(): array
+    {
+        return [
+            ...SortingRulesHelper::rules(['name', 'created_at']),
+            'status' => ['sometimes', 'string'],
+        ];
+    }
+}
+```
+
+It allows `sort_by` only from the given columns and `sort_direction` only as `asc` or `desc` (case-sensitive).
 
 Supported query parameters:
 

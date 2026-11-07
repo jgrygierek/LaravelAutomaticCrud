@@ -17,6 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Structure
 
 - `src/` — Package source code
+    - `Helpers/` — `SortingRulesHelper`
     - `Http/Controllers/` — `CrudableController` base class
     - `Http/Interfaces/` — `SearchableInterface`
     - `Traits/` — `ConfigTrait`, `EventTrait`, `ExportTrait`, `ModelTrait`, `PaginationTrait`, `RequestTrait`, `ResourceTrait`, `SearchTrait`, `UpsertTrait`

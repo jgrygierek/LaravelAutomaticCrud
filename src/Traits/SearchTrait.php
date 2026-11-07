@@ -72,7 +72,9 @@ trait SearchTrait
 
     private function canAddSorting(Builder $query, Request $request): bool
     {
-        return !$this->isAlreadySorted($query) && $request->filled('sort_by');
+        return !$this->isAlreadySorted($query)
+            && is_string($request->input('sort_by'))
+            && $request->filled('sort_by');
     }
 
     private function applySorting(Builder $query, Request $request): Builder
@@ -80,11 +82,20 @@ trait SearchTrait
         if ($this->canAddSorting($query, $request)) {
             $query->orderBy(
                 $request->input('sort_by'),
-                $request->input('sort_direction', SortDirection::Asc->value),
+                $this->resolveSortDirection($request)->value,
             );
         }
 
         return $query;
+    }
+
+    private function resolveSortDirection(Request $request): SortDirection
+    {
+        $direction = $request->input('sort_direction');
+
+        return is_string($direction)
+            ? SortDirection::tryFrom(strtolower($direction)) ?? SortDirection::Asc
+            : SortDirection::Asc;
     }
 
     private function isAlreadySorted(Builder $query): bool
