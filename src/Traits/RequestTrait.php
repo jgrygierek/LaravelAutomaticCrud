@@ -13,6 +13,7 @@ use RuntimeException;
 trait RequestTrait
 {
     private ?Request $resolvedRequest = null;
+    private ?Request $resolvedFromRequest = null;
 
     abstract protected function getModelClass(): string;
 
@@ -25,15 +26,18 @@ trait RequestTrait
 
     protected function applyRequest(): Request
     {
-        if ($this->resolvedRequest !== null) {
-            return $this->resolvedRequest;
+        $currentRequest = request();
+
+        if ($this->resolvedFromRequest !== $currentRequest) {
+            $class = $this->getRequestClass(
+                Str::ucfirst(Route::getCurrentRoute()?->getActionMethod() ?: ''),
+            );
+
+            $this->resolvedRequest = $class ? app($class) : $currentRequest;
+            $this->resolvedFromRequest = $currentRequest;
         }
 
-        $class = $this->getRequestClass(
-            Str::ucfirst(Route::getCurrentRoute()?->getActionMethod() ?: ''),
-        );
-
-        return $this->resolvedRequest = $class ? app($class) : request();
+        return $this->resolvedRequest;
     }
 
     protected function getAllowedRequestValues(): array

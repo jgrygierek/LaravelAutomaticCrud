@@ -5,6 +5,7 @@
 ### Fixed
 
 - `show`, `update`, `destroy`, and `upsert` in nested routes now look up the record by the last route parameter instead of the first one.
+- `applyRequest()` no longer returns a request memoized during an earlier request when the controller instance is reused.
 
 ## 1.2.0
 
