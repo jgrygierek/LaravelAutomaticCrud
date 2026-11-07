@@ -430,7 +430,7 @@ when the form request class is not a `FormRequest`:
 
 ### Reusing an already-resolved request
 
-`applyRequest()` memoizes the resolved request for the lifetime of the controller instance, so calling it more than once — directly and/or via `getAllowedRequestValues()`/`validateRequest()` — always returns the same instance instead of resolving (and re-validating) a new one. This makes it safe to resolve the request yourself for custom logic in a fully overridden action, and still use `getAllowedRequestValues()` afterwards:
+`applyRequest()` memoizes the resolved request for the current HTTP request (a controller instance reused for a later request resolves it again), so calling it more than once — directly and/or via `getAllowedRequestValues()`/`validateRequest()` — always returns the same instance instead of resolving (and re-validating) a new one. This makes it safe to resolve the request yourself for custom logic in a fully overridden action, and still use `getAllowedRequestValues()` afterwards:
 
 ```php
 class UserController extends CrudableController
