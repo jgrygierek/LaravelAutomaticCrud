@@ -45,6 +45,7 @@ final class ConfigTraitTest extends TestCase
         yield 'namespaces.event' => ['namespaces.event', 'App\Events'];
         yield 'pagination.paginate' => ['pagination.paginate', true];
         yield 'pagination.per_page' => ['pagination.per_page', 10];
+        yield 'pagination.max_per_page' => ['pagination.max_per_page', 100];
         yield 'pagination.allow_pagination_override' => ['pagination.allow_pagination_override', true];
         yield 'pagination.allow_per_page_override' => ['pagination.allow_per_page_override', true];
         yield 'requests.only_validated' => ['requests.only_validated', false];

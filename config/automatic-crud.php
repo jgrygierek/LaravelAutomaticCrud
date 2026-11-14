@@ -14,6 +14,7 @@ return [
             'pagination' => [
                 'paginate' => true,
                 'per_page' => 10,
+                'max_per_page' => 100,
                 'allow_pagination_override' => true,
                 'allow_per_page_override' => true,
             ],

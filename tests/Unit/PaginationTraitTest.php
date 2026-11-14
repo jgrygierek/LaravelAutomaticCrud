@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JG\LaravelAutomaticCrud\Tests\Unit;
 
+use Illuminate\Http\Request;
 use JG\LaravelAutomaticCrud\Tests\TestCase;
 use JG\LaravelAutomaticCrud\Traits\ConfigTrait;
 use JG\LaravelAutomaticCrud\Traits\PaginationTrait;
@@ -22,6 +23,11 @@ final class PaginationTraitTest extends TestCase
         {
             use ConfigTrait, PaginationTrait;
 
+            protected function applyRequest(): Request
+            {
+                return request();
+            }
+
             public function exposeDefaultIsPaginationEnabled(): bool
             {
                 return $this->defaultIsPaginationEnabled();
@@ -30,6 +36,11 @@ final class PaginationTraitTest extends TestCase
             public function exposeDefaultItemsPerPage(): int
             {
                 return $this->defaultItemsPerPage();
+            }
+
+            public function exposeMaxItemsPerPage(): int
+            {
+                return $this->maxItemsPerPage();
             }
 
             public function exposeIsPaginationOverrideAllowedInQuery(): bool
@@ -72,6 +83,23 @@ final class PaginationTraitTest extends TestCase
     {
         yield 'returns 10 by default' => [['automatic-crud' => null], 10];
         yield 'returns value from config' => [['automatic-crud.configs.default.pagination.per_page' => 25], 25];
+    }
+
+    #[Test]
+    #[DataProvider('maxItemsPerPageProvider')]
+    public function max_items_per_page(array $config, int $expected): void
+    {
+        config($config);
+
+        $this->assertSame($expected, $this->controller->exposeMaxItemsPerPage());
+    }
+
+    public static function maxItemsPerPageProvider(): iterable
+    {
+        yield 'returns 100 by default' => [['automatic-crud' => null], 100];
+        yield 'returns 100 when config value is null' => [['automatic-crud.configs.default.pagination.max_per_page' => null], 100];
+        yield 'returns value from config' => [['automatic-crud.configs.default.pagination.max_per_page' => 50], 50];
+        yield 'casts string value from config' => [['automatic-crud.configs.default.pagination.max_per_page' => '50'], 50];
     }
 
     #[Test]
