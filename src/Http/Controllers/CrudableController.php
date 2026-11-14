@@ -126,7 +126,7 @@ abstract class CrudableController extends Controller
     {
         $query = $this->newScopedQuery();
 
-        return $query->where($this->resolveRouteKeyColumn($query), $id)->firstOrFail();
+        return $query->where($query->qualifyColumn($this->resolveRouteKeyColumn($query)), $id)->firstOrFail();
     }
 
     protected function newScopedQuery(): Builder
