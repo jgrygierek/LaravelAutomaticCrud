@@ -15,6 +15,7 @@
 - `show`, `update`, `destroy`, and `upsert` in nested routes now look up the record by the last route parameter instead of the first one.
 - `applyRequest()` no longer returns a request memoized during an earlier request when the controller instance is reused.
 - An invalid `sort_direction` falls back to `asc` and a non-string `sort_by` is ignored, instead of failing with `500`.
+- `show`, `update`, and `destroy` qualify the route key column with the model's table, so a join in `modifyQuery()` no longer fails with an ambiguous column error.
 - Pagination reads `?pagination`, `?per_page`, and `?page` from the resolved `index` request, so values set in its `prepareForValidation()` apply.
 
 ## 1.2.0
