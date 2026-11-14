@@ -14,6 +14,7 @@
 - `export` no longer breaks off mid-download when an array or object value can't be encoded as JSON.
 - `export` no longer fails with `500` for an unsorted query on a model without a primary key.
 - `store`, `update`, `destroy`, and `upsert` open their transaction on the model's connection instead of the default one.
+- A non-boolean `?pagination` no longer disables pagination and a non-integer `?per_page` no longer returns one item per page; both fall back to the defaults.
 
 ## 1.3.0
 

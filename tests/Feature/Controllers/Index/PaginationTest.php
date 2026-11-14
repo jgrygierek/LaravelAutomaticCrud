@@ -73,6 +73,38 @@ final class PaginationTest extends CrudTestCase
     }
 
     #[Test]
+    #[DataProvider('invalidPaginationQueryParamProvider')]
+    public function invalid_pagination_query_param_falls_back_to_enabled_default(string $url): void
+    {
+        Item::factory()->count(15)->create();
+
+        $this->getJson($url)
+            ->assertOk()
+            ->assertJsonCount(10, 'data')
+            ->assertJsonPath('meta.per_page', 10);
+    }
+
+    #[Test]
+    #[DataProvider('invalidPaginationQueryParamProvider')]
+    public function invalid_pagination_query_param_falls_back_to_disabled_default(string $url): void
+    {
+        config(['automatic-crud.configs.default.pagination.paginate' => false]);
+
+        Item::factory()->count(15)->create();
+
+        $this->getJson($url)
+            ->assertOk()
+            ->assertJsonCount(15, 'data')
+            ->assertJsonMissingPath('meta');
+    }
+
+    public static function invalidPaginationQueryParamProvider(): iterable
+    {
+        yield 'non-boolean string' => ['/items?pagination=abc'];
+        yield 'array' => ['/items?pagination[]=true'];
+    }
+
+    #[Test]
     public function pagination_disabled_by_method_overrides_enabled_config(): void
     {
         Item::factory()->count(15)->create();

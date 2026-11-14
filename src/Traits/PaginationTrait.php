@@ -61,17 +61,19 @@ trait PaginationTrait
 
     private function canPaginateResults(Request $request): bool
     {
-        return $this->isPaginationOverrideAllowedInQuery() && $request->has('pagination')
-            ? filter_var($request->input('pagination'), FILTER_VALIDATE_BOOLEAN)
-            : $this->defaultIsPaginationEnabled();
+        $override = $this->isPaginationOverrideAllowedInQuery() && $request->has('pagination')
+            ? filter_var($request->input('pagination'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+            : null;
+
+        return $override ?? $this->defaultIsPaginationEnabled();
     }
 
     private function getPerPage(Request $request): int
     {
-        if (!$this->isPerPageOverrideAllowedInQuery() || !$request->filled('per_page')) {
-            return max(1, $this->defaultItemsPerPage());
-        }
+        $perPage = $this->isPerPageOverrideAllowedInQuery()
+            ? filter_var($request->input('per_page'), FILTER_VALIDATE_INT)
+            : false;
 
-        return max(1, min((int) $request->input('per_page'), $this->maxItemsPerPage()));
+        return max(1, $perPage === false ? $this->defaultItemsPerPage() : min($perPage, $this->maxItemsPerPage()));
     }
 }

@@ -200,6 +200,25 @@ final class PerPageTest extends CrudTestCase
     }
 
     #[Test]
+    #[DataProvider('nonIntegerPerPageProvider')]
+    public function non_integer_per_page_falls_back_to_default(string $url): void
+    {
+        Item::factory()->count(15)->create();
+
+        $this->getJson($url)
+            ->assertOk()
+            ->assertJsonCount(10, 'data')
+            ->assertJsonPath('meta.per_page', 10);
+    }
+
+    public static function nonIntegerPerPageProvider(): iterable
+    {
+        yield 'non-numeric string' => ['/items?per_page=abc'];
+        yield 'decimal' => ['/items?per_page=2.5'];
+        yield 'array' => ['/items?per_page[]=3'];
+    }
+
+    #[Test]
     public function per_page_method_overrides_config(): void
     {
         Item::factory()->count(10)->create();
