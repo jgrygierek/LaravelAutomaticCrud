@@ -10,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use JG\LaravelAutomaticCrud\Enums\EventAction;
 use JG\LaravelAutomaticCrud\Traits\ConfigTrait;
@@ -47,7 +46,7 @@ abstract class CrudableController extends Controller
     public function store(): JsonResponse
     {
         $data = $this->getAllowedRequestValues();
-        $model = DB::transaction(fn (): Model => $this->createModel($data));
+        $model = $this->getModelConnection()->transaction(fn (): Model => $this->createModel($data));
 
         $this->dispatchEvent(EventAction::Created, $model);
 
@@ -68,7 +67,7 @@ abstract class CrudableController extends Controller
     public function update(int|string $id): JsonResource
     {
         $id = last(func_get_args());
-        $model = DB::transaction(function () use ($id): Model {
+        $model = $this->getModelConnection()->transaction(function () use ($id): Model {
             return $this->updateModel(
                 $this->findModel($id),
                 $this->getAllowedRequestValues(),
@@ -86,7 +85,7 @@ abstract class CrudableController extends Controller
     public function destroy(int|string $id): Response
     {
         $id = last(func_get_args());
-        $model = DB::transaction(function () use ($id): Model {
+        $model = $this->getModelConnection()->transaction(function () use ($id): Model {
             $model = $this->findModel($id);
             $this->validateRequest();
 
