@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JG\LaravelAutomaticCrud\Tests\Feature\Controllers;
 
+use Illuminate\Database\Eloquent\Builder;
 use JG\LaravelAutomaticCrud\Tests\Feature\CrudTestCase;
 use JG\LaravelAutomaticCrud\Tests\Support\Controllers\ModifyQueryController;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
@@ -14,6 +15,26 @@ final class ModifyQueryScopeTest extends CrudTestCase
     protected function defineRoutes($router): void
     {
         $router->apiResource('modify-query-items', ModifyQueryController::class)->only(['show', 'update', 'destroy']);
+    }
+
+    #[Test]
+    public function show_finds_item_when_modify_query_joins_table_with_same_key_column(): void
+    {
+        $this->app->instance(ModifyQueryController::class, new class extends ModifyQueryController
+        {
+            protected function modifyQuery(Builder $query): Builder
+            {
+                return $query
+                    ->join('items as parents', 'parents.id', '=', 'items.id')
+                    ->select('items.*');
+            }
+        });
+
+        $item = Item::factory()->create();
+
+        $this->getJson(route('modify-query-items.show', $item))
+            ->assertOk()
+            ->assertJsonPath('data.id', $item->id);
     }
 
     #[Test]
