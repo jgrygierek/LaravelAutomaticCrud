@@ -187,6 +187,8 @@ Priority order (highest to lowest) for both pagination and per-page:
 
 `maxItemsPerPage()` (config `pagination.max_per_page`) caps only `?per_page`. The defaults above are not capped.
 
+A `?pagination` value that isn't a boolean or a `?per_page` value that isn't an integer is ignored, so the defaults apply.
+
 `?pagination=false` returns all items; disable it with `pagination.allow_pagination_override` to enforce the cap.
 
 Pagination reads its query parameters from the resolved `index` request, so values set in its `prepareForValidation()` apply.
