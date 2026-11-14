@@ -387,6 +387,32 @@ final class ExportTest extends CrudTestCase
     }
 
     #[Test]
+    public function writes_json_values_that_cannot_be_fully_encoded(): void
+    {
+        $this->app->instance(ExportItemController::class, new class extends ExportItemController
+        {
+            protected function getResourceExportClass(): string
+            {
+                return JsonResource::class;
+            }
+
+            protected function getExportRow(Model $model, Request $request): array
+            {
+                return [
+                    'invalid_utf8' => ["\xB1x"],
+                    'infinite' => [INF],
+                ];
+            }
+        });
+
+        Item::factory()->create();
+
+        $lines = explode("\r\n", $this->get('/export-items/export')->streamedContent(), 2);
+
+        $this->assertSame("\"[\"\"\u{FFFD}x\"\"]\",[0]\r\n", $lines[1]);
+    }
+
+    #[Test]
     public function returns_422_when_form_request_validation_fails(): void
     {
         $this->getJson(route('items.export', ['sort_direction' => 'sideways']))

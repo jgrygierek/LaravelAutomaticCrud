@@ -11,6 +11,7 @@
 - `show`, `update`, and `destroy` qualify the route key column with the model's table, so a join in `modifyQuery()` no longer fails with an ambiguous column error.
 - Model resolution removes only the trailing `Controller` from the controller class name (`ControllerLogController` resolves to `ControllerLog`).
 - Pagination reads `?pagination`, `?per_page`, and `?page` from the resolved `index` request, so values set in its `prepareForValidation()` apply.
+- `export` no longer breaks off mid-download when an array or object value can't be encoded as JSON.
 
 ## 1.3.0
 
