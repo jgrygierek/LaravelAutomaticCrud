@@ -12,6 +12,7 @@
 - Model resolution removes only the trailing `Controller` from the controller class name (`ControllerLogController` resolves to `ControllerLog`).
 - Pagination reads `?pagination`, `?per_page`, and `?page` from the resolved `index` request, so values set in its `prepareForValidation()` apply.
 - `export` no longer breaks off mid-download when an array or object value can't be encoded as JSON.
+- `export` no longer fails with `500` for an unsorted query on a model without a primary key.
 
 ## 1.3.0
 
