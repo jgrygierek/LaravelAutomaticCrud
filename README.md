@@ -325,7 +325,7 @@ A controller overriding `getConfigName()` to return `'api'` will get `[ActiveFil
 | `upsert`  | `PUT`       | `/items/{item}`    | `200`/`201` resource    | `Updated`/`Created`    | `UpsertTrait`        |
 | `export`  | `GET`       | `/items/export`    | `200` CSV download      | —                      | `ExportTrait`        |
 
-Every action resolves its form request by convention (see [Request class convention](#request-class-convention)). `store`, `update`, `destroy`, and `upsert` run inside a database transaction.
+Every action resolves its form request by convention (see [Request class convention](#request-class-convention)). `store`, `update`, `destroy`, and `upsert` run inside a database transaction on the model's connection.
 
 ### Upsert
 
