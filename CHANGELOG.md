@@ -4,6 +4,7 @@
 
 ### Changed
 
+- `upsert()` no longer takes an ID from the route; it targets singleton (1:1) resources identified by the new `getUpsertAttributes()`, and `upsertModel()` now receives those attributes instead of `$id`.
 - `?per_page` is capped at `pagination.max_per_page` (`100` by default); override `maxItemsPerPage()` to change it.
 
 ### Fixed
