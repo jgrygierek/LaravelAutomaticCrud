@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace JG\LaravelAutomaticCrud\Traits;
 
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\DB;
 use JG\LaravelAutomaticCrud\Enums\EventAction;
 use Throwable;
 
 trait UpsertTrait
 {
     abstract protected function getAllowedRequestValues(): array;
+
+    abstract protected function getModelConnection(): ConnectionInterface;
 
     abstract protected function newScopedQuery(): Builder;
 
@@ -31,7 +33,7 @@ trait UpsertTrait
     {
         $id = last(func_get_args());
         $data = $this->getAllowedRequestValues();
-        $model = DB::transaction(fn (): Model => $this->upsertModel($id, $data));
+        $model = $this->getModelConnection()->transaction(fn (): Model => $this->upsertModel($id, $data));
 
         $this->dispatchEvent($model->wasRecentlyCreated ? EventAction::Created : EventAction::Updated, $model);
 
