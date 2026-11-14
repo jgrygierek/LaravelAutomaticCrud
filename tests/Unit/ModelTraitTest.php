@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JG\LaravelAutomaticCrud\Tests\Unit;
 
 use Closure;
+use JG\LaravelAutomaticCrud\Http\Controllers\CrudableController;
 use JG\LaravelAutomaticCrud\Tests\Support\Controllers\ItemController;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
 use JG\LaravelAutomaticCrud\Tests\TestCase;
@@ -23,6 +24,16 @@ final class ModelTraitTest extends TestCase
         $result = Closure::bind(fn () => $this->getModelClass(), $controller, $controller::class)();
 
         $this->assertSame(Item::class, $result);
+    }
+
+    #[Test]
+    public function removes_only_trailing_controller_suffix_from_class_name(): void
+    {
+        $controller = new ItemController();
+
+        $result = Closure::bind(fn () => $this->getModelFileName('ControllerLogController'), $controller, CrudableController::class)();
+
+        $this->assertSame('ControllerLog', $result);
     }
 
     #[Test]

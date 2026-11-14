@@ -2,21 +2,27 @@
 
 ## Unreleased
 
-### Added
-
-- `SortingRulesHelper::rules()` returns validation rules restricting `sort_by` and `sort_direction`.
-
 ### Changed
 
 - `?per_page` is capped at `pagination.max_per_page` (`100` by default); override `maxItemsPerPage()` to change it.
 
 ### Fixed
 
+- `show`, `update`, and `destroy` qualify the route key column with the model's table, so a join in `modifyQuery()` no longer fails with an ambiguous column error.
+- Model resolution removes only the trailing `Controller` from the controller class name (`ControllerLogController` resolves to `ControllerLog`).
+- Pagination reads `?pagination`, `?per_page`, and `?page` from the resolved `index` request, so values set in its `prepareForValidation()` apply.
+
+## 1.3.0
+
+### Added
+
+- `SortingRulesHelper::rules()` returns validation rules restricting `sort_by` and `sort_direction`.
+
+### Fixed
+
 - `show`, `update`, `destroy`, and `upsert` in nested routes now look up the record by the last route parameter instead of the first one.
 - `applyRequest()` no longer returns a request memoized during an earlier request when the controller instance is reused.
 - An invalid `sort_direction` falls back to `asc` and a non-string `sort_by` is ignored, instead of failing with `500`.
-- `show`, `update`, and `destroy` qualify the route key column with the model's table, so a join in `modifyQuery()` no longer fails with an ambiguous column error.
-- Pagination reads `?pagination`, `?per_page`, and `?page` from the resolved `index` request, so values set in its `prepareForValidation()` apply.
 
 ## 1.2.0
 
