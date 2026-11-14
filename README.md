@@ -222,7 +222,7 @@ Route::delete('orders/{order:uid}', [OrderController::class, 'destroy']);
 
 The controller keeps the usual `show(int|string $id)` signature — the `uid` segment is resolved automatically from the route definition. Routes without an explicit binding field keep using the model's route key.
 
-In nested routes (e.g. `users/{user}/posts/{post}`) the record is identified by the last route parameter, so `$id` passed to `findModel()`/`upsertModel()` is the `{post}` value. Parent parameters are not used to constrain the lookup — scope it in `modifyQuery()` if needed. When overriding an action, forward all arguments with `parent::show(...func_get_args())` — `parent::show($id)` would pass only the parent value.
+In nested routes (e.g. `users/{user}/posts/{post}`) the record is identified by the last route parameter, so `$id` passed to `findModel()` is the `{post}` value. Parent parameters are not used to constrain the lookup — scope it in `modifyQuery()` if needed. When overriding an action, forward all arguments with `parent::show(...func_get_args())` — `parent::show($id)` would pass only the parent value.
 
 `findModel()` is `protected`, so it can be overridden entirely if the lookup logic above doesn't fit (e.g. querying across multiple tables).
 
@@ -324,32 +324,51 @@ A controller overriding `getConfigName()` to return `'api'` will get `[ActiveFil
 | `show`    | `GET`       | `/items/{item}`    | `200` resource          | —                      | `CrudableController` |
 | `update`  | `PUT/PATCH` | `/items/{item}`    | `200` resource          | `Updated`              | `CrudableController` |
 | `destroy` | `DELETE`    | `/items/{item}`    | `204` no content        | `Deleted`              | `CrudableController` |
-| `upsert`  | `PUT`       | `/items/{item}`    | `200`/`201` resource    | `Updated`/`Created`    | `UpsertTrait`        |
+| `upsert`  | `PUT`       | `/item`            | `200`/`201` resource    | `Updated`/`Created`    | `UpsertTrait`        |
 | `export`  | `GET`       | `/items/export`    | `200` CSV download      | —                      | `ExportTrait`        |
 
 Every action resolves its form request by convention (see [Request class convention](#request-class-convention)). `store`, `update`, `destroy`, and `upsert` run inside a database transaction on the model's connection.
 
 ### Upsert
 
-`upsert(int|string $id)` is not part of `CrudableController` — add it to a specific controller with `UpsertTrait`, then register a route for it manually (it's not part of `Route::apiResource()`):
+`upsert()` is not part of `CrudableController` — add it to a specific controller with `UpsertTrait`, then register a route for it manually (it's not part of `Route::apiResource()`). It is meant for singleton (1:1) resources, where the record is identified by its owner instead of its own ID, so the route has no ID parameter:
 
 ```php
 use JG\LaravelAutomaticCrud\Traits\UpsertTrait;
 
-class ItemController extends CrudableController
+class ProfileController extends CrudableController
 {
     use UpsertTrait;
+
+    protected function getUpsertAttributes(): array
+    {
+        return ['user_id' => auth()->id()];
+    }
 }
 ```
 
 ```php
 // routes/api.php
-Route::put('items/{item}', [ItemController::class, 'upsert']);
+Route::put('profile', [ProfileController::class, 'upsert']);
 ```
 
-It looks up a record by the same route key column `show`/`update`/`destroy` use, independently of `createModel()`/`updateModel()`. It responds `200` when it updated an existing record, `201` when it created one, and dispatches the matching `Created` or `Updated` event. Override `upsertModel(int|string $id, array $data): Model` to customize the write.
+`getUpsertAttributes()` returns the attributes that identify the record (for a nested route such as `users/{user}/profile`, use `['user_id' => request()->route('user')]`; return `[]` for a table holding a single record). The record is looked up by them within the controller's query (`modifyQuery()`, `withoutGlobalScopes()`). It responds `200` when it updated an existing record, `201` when it created one, and dispatches the matching `Updated` or `Created` event.
 
-If the route key column is the (non-fillable) primary key, creating a new record won't force that key to `$id` — mass assignment silently drops it, same as `store()`. Upsert-by-`$id` reliably targets a specific new record only when the route key column is fillable (e.g. a natural key like `slug`).
+In a 1:N relation, return the parent together with a key that is unique within it, so the attributes still match exactly one record — the parent alone would always update the first matching record:
+
+```php
+// Route::put('users/{user}/addresses/{type}', [AddressController::class, 'upsert']);
+
+protected function getUpsertAttributes(): array
+{
+    return [
+        'user_id' => request()->route('user'),
+        'type' => request()->route('type'),
+    ];
+}
+```
+
+The identifying attributes are set on the record directly: they don't need to be fillable and they take precedence over request values. If a matching record exists but is hidden from the controller's query (by `modifyQuery()`, a global scope, or soft deletion), upsert responds `404` instead of creating a duplicate. Override `upsertModel(array $attributes, array $data): Model` to customize the write.
 
 ### Export
 

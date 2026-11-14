@@ -12,4 +12,9 @@ class ItemController extends CrudableController
 {
     use ExportTrait;
     use UpsertTrait;
+
+    protected function getUpsertAttributes(): array
+    {
+        return ['secret' => request()->route('owner')];
+    }
 }

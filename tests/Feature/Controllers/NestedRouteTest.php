@@ -18,7 +18,6 @@ final class NestedRouteTest extends CrudTestCase
         $router->get('parents/{parent}/items/{item}', [ItemController::class, 'show']);
         $router->put('parents/{parent}/items/{item}', [ItemController::class, 'update']);
         $router->delete('parents/{parent}/items/{item}', [ItemController::class, 'destroy']);
-        $router->put('parents/{parent}/upsert-items/{item}', [ItemController::class, 'upsert']);
         $router->get('parents/{parent}/named-items/{item:name}', [ItemController::class, 'show']);
     }
 
@@ -69,20 +68,6 @@ final class NestedRouteTest extends CrudTestCase
 
         $this->assertDatabaseMissing('items', ['id' => $item->id]);
         $this->assertDatabaseHas('items', ['id' => $parentLookalike->id]);
-    }
-
-    #[Test]
-    public function upserts_item_identified_by_last_route_parameter(): void
-    {
-        $item = Item::factory()->create(['name' => 'Old Name']);
-        $parentLookalike = Item::factory()->create(['name' => 'Parent Name']);
-
-        $this->putJson("/parents/{$parentLookalike->id}/upsert-items/{$item->id}", ['name' => 'New Name'])
-            ->assertOk()
-            ->assertJsonPath('data.id', $item->id)
-            ->assertJsonPath('data.name', 'New Name');
-
-        $this->assertDatabaseHas('items', ['id' => $parentLookalike->id, 'name' => 'Parent Name']);
     }
 
     #[Test]
