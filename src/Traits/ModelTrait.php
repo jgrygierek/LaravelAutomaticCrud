@@ -37,6 +37,6 @@ trait ModelTrait
 
     private function getModelFileName(string $modelClass): string
     {
-        return Str::replace('Controller', '', Str::ucfirst($modelClass));
+        return Str::chopEnd(Str::ucfirst($modelClass), 'Controller');
     }
 }
