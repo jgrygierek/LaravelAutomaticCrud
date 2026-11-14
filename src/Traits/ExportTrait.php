@@ -74,10 +74,11 @@ trait ExportTrait
     {
         $chunkSize = $this->getExportChunkSize();
         $keyName = $query->getModel()->getKeyName();
+        $isSorted = !empty($query->getQuery()->orders);
 
         return match (true) {
-            $keyName === null => $query->lazy($chunkSize),
-            empty($query->getQuery()->orders) => $this->groupExportWheres($query)->lazyById($chunkSize, $query->qualifyColumn($keyName), $keyName),
+            $keyName === null => $isSorted ? $query->lazy($chunkSize) : $query->cursor(),
+            !$isSorted => $this->groupExportWheres($query)->lazyById($chunkSize, $query->qualifyColumn($keyName), $keyName),
             default => $query->orderBy($query->qualifyColumn($keyName))->lazy($chunkSize),
         };
     }

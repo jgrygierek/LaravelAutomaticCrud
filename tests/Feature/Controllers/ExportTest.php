@@ -141,6 +141,38 @@ final class ExportTest extends CrudTestCase
     }
 
     #[Test]
+    public function exports_unsorted_model_without_primary_key_in_single_query(): void
+    {
+        $this->app->instance(ExportItemController::class, new class extends ExportItemController
+        {
+            protected function getModelClass(): string
+            {
+                return KeylessItem::class;
+            }
+
+            protected function getResourceExportClass(): string
+            {
+                return JsonResource::class;
+            }
+
+            protected function getExportRow(Model $model, Request $request): array
+            {
+                return ['name' => $model->name];
+            }
+        });
+
+        config(['automatic-crud.configs.default.export.chunk_size' => 1]);
+        Item::factory()->create(['name' => 'Alpha']);
+        Item::factory()->create(['name' => 'Beta']);
+        DB::enableQueryLog();
+
+        $content = $this->get('/export-items/export')->assertOk()->streamedContent();
+
+        $this->assertSame("name\r\nAlpha\r\nBeta\r\n", $content);
+        $this->assertSame(['select * from "items"'], array_column(DB::getQueryLog(), 'query'));
+    }
+
+    #[Test]
     public function skips_tie_breaker_for_model_without_primary_key(): void
     {
         $this->app->instance(ExportItemController::class, new class extends ExportItemController
