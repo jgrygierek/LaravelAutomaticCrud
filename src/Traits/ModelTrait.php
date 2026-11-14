@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JG\LaravelAutomaticCrud\Traits;
 
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -33,6 +34,11 @@ trait ModelTrait
         }
 
         throw new RuntimeException("Model class [$class] not found.");
+    }
+
+    protected function getModelConnection(): ConnectionInterface
+    {
+        return new ($this->getModelClass())()->getConnection();
     }
 
     private function getModelFileName(string $modelClass): string
