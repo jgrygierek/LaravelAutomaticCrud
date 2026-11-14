@@ -56,9 +56,14 @@ final class ModelConnectionTransactionTest extends CrudTestCase
                 throw new RuntimeException();
             }
 
-            protected function upsertModel(int|string $id, array $data): Model
+            protected function getUpsertAttributes(): array
             {
-                parent::upsertModel($id, $data);
+                return ['name' => request()->route('name')];
+            }
+
+            protected function upsertModel(array $attributes, array $data): Model
+            {
+                parent::upsertModel($attributes, $data);
 
                 throw new RuntimeException();
             }
@@ -82,7 +87,7 @@ final class ModelConnectionTransactionTest extends CrudTestCase
     {
         parent::defineRoutes($router);
 
-        $router->put('upsert-items/{item}', [ItemController::class, 'upsert']);
+        $router->put('upsert-items/{name}', [ItemController::class, 'upsert']);
     }
 
     #[Test]
@@ -125,10 +130,8 @@ final class ModelConnectionTransactionTest extends CrudTestCase
     #[Test]
     public function upsert_rolls_back_on_model_connection_when_persisting_fails(): void
     {
-        $item = SecondaryConnectionItem::query()->create(['name' => 'Old Name']);
+        $this->assertThrows(fn () => $this->putJson('/upsert-items/new-name', ['name' => 'new-name']), RuntimeException::class);
 
-        $this->assertThrows(fn () => $this->putJson("/upsert-items/$item->id", ['name' => 'New Name']), RuntimeException::class);
-
-        $this->assertDatabaseHas('items', ['id' => $item->id, 'name' => 'Old Name'], 'secondary');
+        $this->assertDatabaseCount('items', 0, 'secondary');
     }
 }
