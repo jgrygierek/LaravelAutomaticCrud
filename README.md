@@ -47,7 +47,7 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
 ## Installation
 
 ```bash
-composer require jg/laravel-automatic-crud
+composer require jgrygierek/laravel-automatic-crud
 ```
 
 Laravel auto-discovers the service provider. Optionally publish the config file:
