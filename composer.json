@@ -1,5 +1,5 @@
 {
-    "name": "jg/laravel-automatic-crud",
+    "name": "jgrygierek/laravel-automatic-crud",
     "description": "Convention-based CRUD controllers for Laravel with automatic model, request, resource, and event resolution, pagination, sorting, and searchable filters",
     "type": "library",
     "keywords": [

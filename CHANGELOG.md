@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.5.0
+
+### Changed
+
+- Package renamed to `jgrygierek/laravel-automatic-crud`; the `JG\LaravelAutomaticCrud` namespace is unchanged.
+
+## 1.4.0
 
 ### Changed
 

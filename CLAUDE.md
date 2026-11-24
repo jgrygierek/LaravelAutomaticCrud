@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`JG/laravel-automatic-crud` is a standalone Laravel package providing automatic CRUD controllers with custom configurations.
+`jgrygierek/laravel-automatic-crud` is a standalone Laravel package providing automatic CRUD controllers with custom configurations.
 
 ## Environment Setup
 
