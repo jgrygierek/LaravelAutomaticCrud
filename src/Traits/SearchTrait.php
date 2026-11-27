@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Pipeline;
 use JG\LaravelAutomaticCrud\Enums\SortDirection;
+use JG\LaravelAutomaticCrud\Helpers\QueryHelper;
 use JG\LaravelAutomaticCrud\Http\Interfaces\SearchableInterface;
 
 trait SearchTrait
@@ -72,7 +73,7 @@ trait SearchTrait
 
     private function canAddSorting(Builder $query, Request $request): bool
     {
-        return !$this->isAlreadySorted($query)
+        return !QueryHelper::isSorted($query)
             && is_string($request->input('sort_by'))
             && $request->filled('sort_by');
     }
@@ -96,10 +97,5 @@ trait SearchTrait
         return is_string($direction)
             ? SortDirection::tryFrom(strtolower($direction)) ?? SortDirection::Asc
             : SortDirection::Asc;
-    }
-
-    private function isAlreadySorted(Builder $query): bool
-    {
-        return !empty($query->getQuery()->orders);
     }
 }

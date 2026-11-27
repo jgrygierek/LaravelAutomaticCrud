@@ -8,15 +8,23 @@ use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 use Iterator;
+use JG\LaravelAutomaticCrud\Helpers\QueryHelper;
+use RuntimeException;
 use Stringable;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use UnitEnum;
 
 trait ExportTrait
 {
+    /**
+     * @var class-string<JsonResource>|null
+     */
+    private ?string $resolvedResourceExportClass = null;
+
     abstract protected function getModelClass(): string;
 
     abstract protected function getConfig(string $key): mixed;
@@ -25,7 +33,9 @@ trait ExportTrait
 
     abstract protected function buildQuery(Request $request): Builder;
 
-    abstract protected function getResourceExportClass(): string;
+    abstract protected function getResourceClassByConvention(string $suffix): string;
+
+    abstract protected function resolveResourceClass(string $suffix): ?string;
 
     public function export(): StreamedResponse
     {
@@ -39,6 +49,15 @@ trait ExportTrait
             $this->getExportFileName(),
             ['Content-Type' => 'text/csv; charset=UTF-8'],
         );
+    }
+
+    /**
+     * @return class-string<JsonResource>
+     */
+    protected function getResourceExportClass(): string
+    {
+        return $this->resolvedResourceExportClass ??= $this->resolveResourceClass('ExportResource')
+            ?? throw new RuntimeException(sprintf('Export resource class [%s] not found.', $this->getResourceClassByConvention('ExportResource')));
     }
 
     protected function getExportFileName(): string
@@ -74,26 +93,13 @@ trait ExportTrait
     {
         $chunkSize = $this->getExportChunkSize();
         $keyName = $query->getModel()->getKeyName();
-        $isSorted = !empty($query->getQuery()->orders);
+        $isSorted = QueryHelper::isSorted($query);
 
         return match (true) {
             $keyName === null => $isSorted ? $query->lazy($chunkSize) : $query->cursor(),
-            !$isSorted => $this->groupExportWheres($query)->lazyById($chunkSize, $query->qualifyColumn($keyName), $keyName),
+            !$isSorted => QueryHelper::groupWheres($query)->lazyById($chunkSize, $query->qualifyColumn($keyName), $keyName),
             default => $query->orderBy($query->qualifyColumn($keyName))->lazy($chunkSize),
         };
-    }
-
-    private function groupExportWheres(Builder $query): Builder
-    {
-        $base = $query->getQuery();
-        $nested = $base->forNestedWhere()->mergeWheres($base->wheres, $base->getRawBindings()['where']);
-
-        $base->wheres = [];
-        $base->bindings['where'] = [];
-
-        $base->addNestedWhereQuery($nested);
-
-        return $query;
     }
 
     /**

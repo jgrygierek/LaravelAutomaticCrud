@@ -37,6 +37,9 @@ trait ConfigTrait
             'pagination.per_page' => 10,
             'pagination.max_per_page' => 100,
             'export.chunk_size' => 5000,
+            'autocomplete.limit' => 10,
+            'autocomplete.min_length' => 3,
+            'autocomplete.term_parameter' => 'q',
             default => null,
         };
     }
