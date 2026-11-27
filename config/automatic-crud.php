@@ -25,6 +25,11 @@ return [
             'export' => [
                 'chunk_size' => 5000,
             ],
+            'autocomplete' => [
+                'limit' => 10,
+                'min_length' => 3,
+                'term_parameter' => 'q',
+            ],
         ],
     ],
 ];

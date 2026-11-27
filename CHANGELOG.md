@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `AutocompleteTrait` adds an optional `autocomplete()` action returning a limited list of records matching the search term in the configured columns.
+
+### Changed
+
+- `getResourceExportClass()` moved from `ResourceTrait` to `ExportTrait`.
+
 ## 1.5.0
 
 ### Changed

@@ -51,6 +51,9 @@ final class ConfigTraitTest extends TestCase
         yield 'requests.only_validated' => ['requests.only_validated', false];
         yield 'requests.force_custom' => ['requests.force_custom', false];
         yield 'export.chunk_size' => ['export.chunk_size', 5000];
+        yield 'autocomplete.limit' => ['autocomplete.limit', 10];
+        yield 'autocomplete.min_length' => ['autocomplete.min_length', 3];
+        yield 'autocomplete.term_parameter' => ['autocomplete.term_parameter', 'q'];
     }
 
     #[Test]

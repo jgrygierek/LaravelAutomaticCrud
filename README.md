@@ -24,6 +24,7 @@ Automatic CRUD controllers with custom configurations for Laravel 12 and 13.
 - [Actions](#actions)
     - [Upsert](#upsert)
     - [Export](#export)
+    - [Autocomplete](#autocomplete)
 - [Requests](#requests)
     - [Namespace override](#namespace-override-1)
     - [Request class convention](#request-class-convention)
@@ -118,8 +119,8 @@ class ItemController extends CrudableController
 **Sorting** is triggered by `?sort_by=<field>`. Direction defaults to `asc` when omitted or invalid. A non-string `sort_by` is ignored. Sorting is skipped when the query already has an `orderBy` (e.g.
 applied inside `modifyQuery()`).
 
-`sort_by` accepts any column name, including hidden ones, and an unknown column fails at the database level. Restrict it in the `index` request (see
-[Request class convention](#request-class-convention)) to get a `422` instead. `SortingRulesHelper::rules()` returns the rules for both parameters:
+`sort_by` accepts any column name, including hidden ones, and an unknown column fails at the database level. Sorting applies to `index`, `export`, and `autocomplete`,
+so restrict it in the request of each of them (see [Request class convention](#request-class-convention)) to get a `422` instead. `SortingRulesHelper::rules()` returns the rules for both parameters:
 
 ```php
 use JG\LaravelAutomaticCrud\Helpers\SortingRulesHelper;
@@ -136,7 +137,8 @@ class IndexItemRequest extends FormRequest
 }
 ```
 
-It allows `sort_by` only from the given columns and `sort_direction` only as `asc` or `desc` (case-sensitive).
+It allows `sort_by` only from the given columns and `sort_direction` only as `asc` or `desc` (case-sensitive). To share the columns between actions, keep them in one place, e.g. a
+model constant passed to `SortingRulesHelper::rules()` in `IndexItemRequest`, `ExportItemRequest`, and `AutocompleteItemRequest`.
 
 Supported query parameters:
 
@@ -317,15 +319,16 @@ A controller overriding `getConfigName()` to return `'api'` will get `[ActiveFil
 
 `CrudableController` provides the actions registered by `Route::apiResource()`. Additional actions are opt-in via traits and need their own routes.
 
-| Action    | Method      | Route              | Response                | Event                  | Source               |
-|-----------|-------------|--------------------|-------------------------|------------------------|----------------------|
-| `index`   | `GET`       | `/items`           | `200` collection        | —                      | `CrudableController` |
-| `store`   | `POST`      | `/items`           | `201` resource          | `Created`              | `CrudableController` |
-| `show`    | `GET`       | `/items/{item}`    | `200` resource          | —                      | `CrudableController` |
-| `update`  | `PUT/PATCH` | `/items/{item}`    | `200` resource          | `Updated`              | `CrudableController` |
-| `destroy` | `DELETE`    | `/items/{item}`    | `204` no content        | `Deleted`              | `CrudableController` |
-| `upsert`  | `PUT`       | `/item`            | `200`/`201` resource    | `Updated`/`Created`    | `UpsertTrait`        |
-| `export`  | `GET`       | `/items/export`    | `200` CSV download      | —                      | `ExportTrait`        |
+| Action         | Method      | Route                 | Response             | Event               | Source               |
+|----------------|-------------|-----------------------|----------------------|---------------------|----------------------|
+| `index`        | `GET`       | `/items`              | `200` collection     | —                   | `CrudableController` |
+| `store`        | `POST`      | `/items`              | `201` resource       | `Created`           | `CrudableController` |
+| `show`         | `GET`       | `/items/{item}`       | `200` resource       | —                   | `CrudableController` |
+| `update`       | `PUT/PATCH` | `/items/{item}`       | `200` resource       | `Updated`           | `CrudableController` |
+| `destroy`      | `DELETE`    | `/items/{item}`       | `204` no content     | `Deleted`           | `CrudableController` |
+| `upsert`       | `PUT`       | `/item`               | `200`/`201` resource | `Updated`/`Created` | `UpsertTrait`        |
+| `export`       | `GET`       | `/items/export`       | `200` CSV download   | —                   | `ExportTrait`        |
+| `autocomplete` | `GET`       | `/items/autocomplete` | `200` collection     | —                   | `AutocompleteTrait`  |
 
 Every action resolves its form request by convention (see [Request class convention](#request-class-convention)). `store`, `update`, `destroy`, and `upsert` run inside a database transaction on the model's connection.
 
@@ -414,6 +417,37 @@ class ItemController extends CrudableController
     }
 }
 ```
+
+### Autocomplete
+
+`autocomplete()` is not part of `CrudableController` — add it to a specific controller with `AutocompleteTrait`, list the columns to search, then register a route for it manually (before `Route::apiResource()`, so `items/autocomplete` isn't matched by `show`):
+
+```php
+use JG\LaravelAutomaticCrud\Traits\AutocompleteTrait;
+
+class ItemController extends CrudableController
+{
+    use AutocompleteTrait;
+
+    protected function getAutocompleteColumns(): array
+    {
+        return ['name', 'sku'];
+    }
+}
+```
+
+```php
+// routes/api.php
+Route::get('items/autocomplete', [ItemController::class, 'autocomplete']);
+```
+
+`GET /items/autocomplete?q=lap` returns up to `autocomplete.limit` (10 by default, at least 1) records where any of the columns contains the term from `?q` (set `autocomplete.term_parameter` to read another parameter), as `{"data": [...]}` without pagination `links`/`meta` and without a `count` query. Each record is resolved through `{Model}AutocompleteResource` (see [Resource class convention](#resource-class-convention)). Without one, the package's `AutocompleteResource` is used, returning `{"id": <primary key>, "label": <label column>}` — the label column is the first of `getAutocompleteColumns()`; override `getAutocompleteLabelColumn(): string` to use another one (required when the columns are empty). A `{Model}AutocompleteResource` extending `AutocompleteResource` receives the label column too.
+
+The query is built like `index` — `SearchableInterface` filters, `modifyQuery()`, `withoutGlobalScopes()`, and `?sort_by`/`?sort_direction` all apply (restrict `sort_by` in `Autocomplete{Model}Request`, see [Pagination and sorting](#pagination-and-sorting)). Existing `where` clauses are grouped before the term condition is added, so an ungrouped `orWhere()` in `modifyQuery()` or a filter can't bypass it. `%`, `_`, and `!` in the term match literally, and case sensitivity follows the column's collation. Return `[]` from `getAutocompleteColumns()` to rely on filters only — the term and `min_length` are then ignored.
+
+If the term is missing or shorter than `autocomplete.min_length` (3 by default), an empty list is returned without querying the database. With `min_length` set to `0`, an empty term returns the first records with no column conditions.
+
+Override `getAutocompleteLimit(): int`, `getAutocompleteMinLength(): int`, or `getAutocompleteTermParameter(): string` to change the values for a single controller, `getAutocompleteTerm(Request $request): string` to read the term from elsewhere, or `applyAutocompleteSearch(Builder $query, string $term): Builder` to search differently (e.g. full-text or prefix match).
 
 ## Requests
 
@@ -530,18 +564,19 @@ Priority order (highest to lowest):
 
 Given `ItemController`, the package looks for resource classes at:
 
-| Type                | Used by                                    | Convention                                       | Example                                     |
-|---------------------|--------------------------------------------|--------------------------------------------------|---------------------------------------------|
-| Resource            | `show`, `store`, `update`, `upsert`        | `{resource_namespace}\{Model}Resource`           | `App\Http\Resources\ItemResource`           |
-| Collection resource | `index` (applied to each record)           | `{resource_namespace}\{Model}CollectionResource` | `App\Http\Resources\ItemCollectionResource` |
-| Export resource     | `export` (applied to each record)          | `{resource_namespace}\{Model}ExportResource`     | `App\Http\Resources\ItemExportResource`     |
+| Type                  | Used by                                 | Convention                                         | Example                                       |
+|-----------------------|-----------------------------------------|----------------------------------------------------|-----------------------------------------------|
+| Resource              | `show`, `store`, `update`, `upsert`     | `{resource_namespace}\{Model}Resource`             | `App\Http\Resources\ItemResource`             |
+| Collection resource   | `index` (applied to each record)        | `{resource_namespace}\{Model}CollectionResource`   | `App\Http\Resources\ItemCollectionResource`   |
+| Export resource       | `export` (applied to each record)       | `{resource_namespace}\{Model}ExportResource`       | `App\Http\Resources\ItemExportResource`       |
+| Autocomplete resource | `autocomplete` (applied to each record) | `{resource_namespace}\{Model}AutocompleteResource` | `App\Http\Resources\ItemAutocompleteResource` |
 
 If `{Model}Resource` is not found, `JsonResource` is used as a fallback. If `{Model}CollectionResource` is not found, it falls back to `{Model}Resource`, then
-`JsonResource`. `{Model}ExportResource` has no fallback — a `RuntimeException` is thrown when it's missing.
+`JsonResource`. If `{Model}AutocompleteResource` is not found, the package's `AutocompleteResource` is used. `{Model}ExportResource` has no fallback — a `RuntimeException` is thrown when it's missing.
 
 ### Resource class override
 
-Override `getResourceClass()`, `getResourceCollectionClass()`, or `getResourceExportClass()` to bypass the namespace method and naming convention entirely:
+Override `getResourceClass()`, `getResourceCollectionClass()`, `getResourceExportClass()`, or `getResourceAutocompleteClass()` to bypass the namespace method and naming convention entirely:
 
 ```php
 class ItemController extends CrudableController
@@ -559,6 +594,11 @@ class ItemController extends CrudableController
     protected function getResourceExportClass(): string
     {
         return CustomItemExportResource::class;
+    }
+
+    protected function getResourceAutocompleteClass(): string
+    {
+        return CustomItemAutocompleteResource::class;
     }
 }
 ```
@@ -654,6 +694,11 @@ return [
             ],
             'export' => [
                 'chunk_size' => 5000,
+            ],
+            'autocomplete' => [
+                'limit'          => 10,
+                'min_length'     => 3,
+                'term_parameter' => 'q',
             ],
         ],
         'api' => [

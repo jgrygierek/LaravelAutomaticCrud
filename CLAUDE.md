@@ -17,10 +17,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Structure
 
 - `src/` — Package source code
-    - `Helpers/` — `SortingRulesHelper`
+    - `Helpers/` — `QueryHelper`, `SortingRulesHelper`
     - `Http/Controllers/` — `CrudableController` base class
     - `Http/Interfaces/` — `SearchableInterface`
-    - `Traits/` — `ConfigTrait`, `EventTrait`, `ExportTrait`, `ModelTrait`, `PaginationTrait`, `RequestTrait`, `ResourceTrait`, `SearchTrait`, `UpsertTrait`
+    - `Http/Resources/` — `AutocompleteResource`
+    - `Traits/` — `AutocompleteTrait`, `ConfigTrait`, `EventTrait`, `ExportTrait`, `ModelTrait`, `PaginationTrait`, `RequestTrait`, `ResourceTrait`, `SearchTrait`, `UpsertTrait`
     - `AutomaticCrudServiceProvider.php` — Service provider
 - `config/` — Publishable config file (`automatic-crud.php`)
 - `tests/` — Test suite
