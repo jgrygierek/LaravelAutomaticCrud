@@ -11,6 +11,11 @@ use RuntimeException;
 
 trait ModelTrait
 {
+    /**
+     * @var class-string<Model>|null
+     */
+    private ?string $resolvedModelClass = null;
+
     abstract protected function getConfig(string $key): mixed;
 
     protected function getModelNamespace(): string
@@ -22,6 +27,14 @@ trait ModelTrait
      * @return class-string<Model>
      */
     protected function getModelClass(): string
+    {
+        return $this->resolvedModelClass ??= $this->resolveModelClass();
+    }
+
+    /**
+     * @return class-string<Model>
+     */
+    private function resolveModelClass(): string
     {
         $class = sprintf(
             '%s\%s',

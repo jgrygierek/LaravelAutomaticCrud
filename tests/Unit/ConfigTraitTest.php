@@ -30,7 +30,7 @@ final class ConfigTraitTest extends TestCase
 
     #[Test]
     #[DataProvider('fallbackValuesProvider')]
-    public function returns_hardcoded_fallback_value_when_no_config_set(string $key, mixed $expected): void
+    public function returns_package_default_value_when_no_config_set(string $key, mixed $expected): void
     {
         config(['automatic-crud' => null]);
 

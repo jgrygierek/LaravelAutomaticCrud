@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 namespace JG\LaravelAutomaticCrud\Tests\Unit;
 
+use Deprecated;
 use Illuminate\Support\Facades\Validator;
 use JG\LaravelAutomaticCrud\Helpers\SortingRulesHelper;
 use JG\LaravelAutomaticCrud\Tests\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use ReflectionMethod;
 
 final class SortingRulesHelperTest extends TestCase
 {
+    #[Test]
+    public function rules_is_deprecated(): void
+    {
+        $deprecated = new ReflectionMethod(SortingRulesHelper::class, 'rules')->getAttributes(Deprecated::class)[0]->newInstance();
+
+        $this->assertSame('1.6.0', $deprecated->since);
+        $this->assertStringEndsWith('will be removed in 2.0.0', (string) $deprecated->message);
+    }
+
     #[Test]
     #[DataProvider('validInputProvider')]
     public function accepts_valid_sorting_input(array $input): void

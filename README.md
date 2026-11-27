@@ -96,7 +96,7 @@ Priority order (highest to lowest):
 1. `getModelNamespace()` controller override
 2. Custom configuration value
 3. Config default (`namespaces.model`)
-4. Hardcoded fallback (`App\Models`)
+4. Package default (`App\Models`)
 
 ### Model class override
 
@@ -116,29 +116,30 @@ class ItemController extends CrudableController
 
 **Pagination** is enabled by default and returns 10 items per page wrapped in `{ data, links, meta }`. Disable it to get a plain `{ data }` array.
 
-**Sorting** is triggered by `?sort_by=<field>`. Direction defaults to `asc` when omitted or invalid. A non-string `sort_by` is ignored. Sorting is skipped when the query already has an `orderBy` (e.g.
-applied inside `modifyQuery()`).
+**Sorting** is triggered by `?sort_by=<field>` with an optional `?sort_direction=asc|desc` (case-insensitive, `asc` when omitted). Both are validated by the controller, and an
+invalid value — a column that isn't sortable, a non-string `sort_by`, or another direction — fails with `422`. Sorting, and its validation, is skipped when the query already
+has an `orderBy` (e.g. applied inside `modifyQuery()`); `sort_direction` without `sort_by` is ignored.
 
-`sort_by` accepts any column name, including hidden ones, and an unknown column fails at the database level. Sorting applies to `index`, `export`, and `autocomplete`,
-so restrict it in the request of each of them (see [Request class convention](#request-class-convention)) to get a `422` instead. `SortingRulesHelper::rules()` returns the rules for both parameters:
+The sortable columns are by default the columns of the model's table that it serializes — limited to `$visible` when set, without `$hidden` ones. They are read with one schema
+query, only when `sort_by` is present and once per controller instance. Override
+`getIndexSortableColumns(): array` to narrow the list or to add a column from outside the table, e.g. an alias selected in `modifyQuery()` (`defaultSortableColumns()` returns the
+table-based default):
 
 ```php
-use JG\LaravelAutomaticCrud\Helpers\SortingRulesHelper;
-
-class IndexItemRequest extends FormRequest
+class ItemController extends CrudableController
 {
-    public function rules(): array
+    protected function getIndexSortableColumns(): array
     {
-        return [
-            ...SortingRulesHelper::rules(['name', 'created_at']),
-            'status' => ['sometimes', 'string'],
-        ];
+        return [...$this->defaultSortableColumns(), 'tags_count'];
     }
 }
 ```
 
-It allows `sort_by` only from the given columns and `sort_direction` only as `asc` or `desc` (case-sensitive). To share the columns between actions, keep them in one place, e.g. a
-model constant passed to `SortingRulesHelper::rules()` in `IndexItemRequest`, `ExportItemRequest`, and `AutocompleteItemRequest`.
+`export` and `autocomplete` use `getExportSortableColumns()` and `getAutocompleteSortableColumns()`, which return `getIndexSortableColumns()` unless overridden. Any other action
+calling `buildQuery()` uses `get{Action}SortableColumns()` when the controller defines it, and `getIndexSortableColumns()` otherwise.
+
+`SortingRulesHelper` is deprecated and will be removed in 2.0.0 — the controller already validates both parameters. Rules it adds to a form request still apply, before the
+controller's validation, so a column must be allowed by both.
 
 Supported query parameters:
 
@@ -146,7 +147,7 @@ Supported query parameters:
 |-------------------|-----------------|---------|------------------------------|
 | `?pagination`     | `true`, `false` | `true`  | Enable or disable pagination |
 | `?per_page`       | integer         | `10`    | Items per page (max `100`)   |
-| `?sort_by`        | column name     | —       | Column to sort by            |
+| `?sort_by`        | sortable column | —       | Column to sort by            |
 | `?sort_direction` | `asc`, `desc`   | `asc`   | Sort direction               |
 
 Override pagination defaults in the controller:
@@ -443,7 +444,7 @@ Route::get('items/autocomplete', [ItemController::class, 'autocomplete']);
 
 `GET /items/autocomplete?q=lap` returns up to `autocomplete.limit` (10 by default, at least 1) records where any of the columns contains the term from `?q` (set `autocomplete.term_parameter` to read another parameter), as `{"data": [...]}` without pagination `links`/`meta` and without a `count` query. Each record is resolved through `{Model}AutocompleteResource` (see [Resource class convention](#resource-class-convention)). Without one, the package's `AutocompleteResource` is used, returning `{"id": <primary key>, "label": <label column>}` — the label column is the first of `getAutocompleteColumns()`; override `getAutocompleteLabelColumn(): string` to use another one (required when the columns are empty). A `{Model}AutocompleteResource` extending `AutocompleteResource` receives the label column too.
 
-The query is built like `index` — `SearchableInterface` filters, `modifyQuery()`, `withoutGlobalScopes()`, and `?sort_by`/`?sort_direction` all apply (restrict `sort_by` in `Autocomplete{Model}Request`, see [Pagination and sorting](#pagination-and-sorting)). Existing `where` clauses are grouped before the term condition is added, so an ungrouped `orWhere()` in `modifyQuery()` or a filter can't bypass it. `%`, `_`, and `!` in the term match literally, and case sensitivity follows the column's collation. Unless the query is already sorted (`?sort_by` or an `orderBy` in `modifyQuery()`), results are ordered by the label column and then the primary key, so the limited list is deterministic; override `applyAutocompleteOrder(Builder $query): Builder` to order them differently. Return `[]` from `getAutocompleteColumns()` to rely on filters only — the term and `min_length` are then ignored.
+The query is built like `index` — `SearchableInterface` filters, `modifyQuery()`, `withoutGlobalScopes()`, and `?sort_by`/`?sort_direction` all apply (`sort_by` limited to `getAutocompleteSortableColumns()`, see [Pagination and sorting](#pagination-and-sorting)). Existing `where` clauses are grouped before the term condition is added, so an ungrouped `orWhere()` in `modifyQuery()` or a filter can't bypass it. `%`, `_`, and `!` in the term match literally, and case sensitivity follows the column's collation. Unless the query is already sorted (`?sort_by` or an `orderBy` in `modifyQuery()`), results are ordered by the label column and then the primary key, so the limited list is deterministic; override `applyAutocompleteOrder(Builder $query): Builder` to order them differently. Return `[]` from `getAutocompleteColumns()` to rely on filters only — the term and `min_length` are then ignored.
 
 If the term is missing or shorter than `autocomplete.min_length` (3 by default), an empty list is returned without querying the database. With `min_length` set to `0`, an empty term returns the first records with no column conditions.
 
@@ -470,7 +471,7 @@ Priority order (highest to lowest):
 1. `getRequestNamespace()` controller override
 2. Custom configuration value
 3. Config default (`namespaces.request`)
-4. Hardcoded fallback (`App\Http\Requests`)
+4. Package default (`App\Http\Requests`)
 
 ### Request class convention
 
@@ -557,7 +558,7 @@ Priority order (highest to lowest):
 1. `getResourceNamespace()` controller override
 2. Custom configuration value
 3. Config default (`namespaces.resource`)
-4. Hardcoded fallback (`App\Http\Resources`)
+4. Package default (`App\Http\Resources`)
 
 ### Resource class convention
 
@@ -623,7 +624,7 @@ Priority order (highest to lowest):
 1. `getEventNamespace()` controller override
 2. Custom configuration value
 3. Config default (`namespaces.event`)
-4. Hardcoded fallback (`App\Events`)
+4. Package default (`App\Events`)
 
 ### Event class convention
 
@@ -724,7 +725,7 @@ class ItemController extends CrudableController
 }
 ```
 
-Config resolution order: named configuration value → `default` configuration value → hardcoded fallback.
+Config resolution order: named configuration value → `default` configuration value → package default from the bundled `config/automatic-crud.php`.
 
 ## Development
 

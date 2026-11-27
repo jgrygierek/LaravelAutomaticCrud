@@ -27,6 +27,18 @@ final class ModelTraitTest extends TestCase
     }
 
     #[Test]
+    public function resolves_model_class_by_convention_only_once(): void
+    {
+        $controller = new ItemController();
+        $getModelClass = Closure::bind(fn () => $this->getModelClass(), $controller, $controller::class);
+
+        $getModelClass();
+        config()->set('automatic-crud.configs.default.namespaces.model', 'App\Models');
+
+        $this->assertSame(Item::class, $getModelClass());
+    }
+
+    #[Test]
     public function removes_only_trailing_controller_suffix_from_class_name(): void
     {
         $controller = new ItemController();

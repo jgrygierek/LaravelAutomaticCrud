@@ -88,6 +88,29 @@ final class ExportTest extends CrudTestCase
     }
 
     #[Test]
+    public function export_sortable_columns_override_takes_precedence_over_index_sortable_columns(): void
+    {
+        $this->app->instance(ExportItemController::class, new class extends ExportItemController
+        {
+            protected function getIndexSortableColumns(): array
+            {
+                return ['id'];
+            }
+
+            protected function getExportSortableColumns(): array
+            {
+                return ['name'];
+            }
+        });
+        Item::factory()->create(['name' => 'Beta']);
+        Item::factory()->create(['name' => 'Alpha']);
+
+        $content = $this->get('/export-items/export?sort_by=name')->assertOk()->streamedContent();
+
+        $this->assertSame("id,name\r\n2,Alpha\r\n1,Beta\r\n", $content);
+    }
+
+    #[Test]
     public function adds_primary_key_as_tie_breaker_when_query_is_sorted(): void
     {
         Item::factory()->count(2)->create(['name' => 'Same']);
@@ -95,7 +118,7 @@ final class ExportTest extends CrudTestCase
 
         $this->sendRequest(['sort_by' => 'name'])->streamedContent();
 
-        $this->assertStringContainsString('order by "name" asc, "items"."id" asc', (string) DB::getQueryLog()[0]['query']);
+        $this->assertStringContainsString('order by "name" asc, "items"."id" asc', (string) array_last(DB::getQueryLog())['query']);
     }
 
     #[Test]
@@ -135,7 +158,7 @@ final class ExportTest extends CrudTestCase
 
         $content = $this->sendRequest(['sort_by' => 'name', 'sort_direction' => 'desc'])->streamedContent();
 
-        $queries = array_column(DB::getQueryLog(), 'query');
+        $queries = array_values(array_filter(array_column(DB::getQueryLog(), 'query'), static fn (string $query): bool => str_starts_with($query, 'select * from "items"')));
         $this->assertSame("id,name\r\n3,\"Item 3\"\r\n2,\"Item 2\"\r\n1,\"Item 1\"\r\n", $content);
         $this->assertCount(2, $queries);
         $this->assertStringEndsWith('order by "name" desc, "items"."id" asc limit 2 offset 2', $queries[1]);
@@ -466,6 +489,22 @@ final class ExportTest extends CrudTestCase
         $this->getJson(route('items.export', ['sort_direction' => 'sideways']))
             ->assertUnprocessable()
             ->assertInvalid(['sort_direction']);
+    }
+
+    #[Test]
+    public function returns_422_before_streaming_when_sorting_by_column_outside_index_sortable_columns(): void
+    {
+        $this->app->instance(ExportItemController::class, new class extends ExportItemController
+        {
+            protected function getIndexSortableColumns(): array
+            {
+                return ['id'];
+            }
+        });
+
+        $this->getJson('/export-items/export?sort_by=name')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('sort_by');
     }
 
     #[Test]

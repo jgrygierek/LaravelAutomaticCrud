@@ -38,7 +38,7 @@ trait ResourceTrait
         return new $resource($object);
     }
 
-    private function getCollectionResource(Collection|LengthAwarePaginator $collection): JsonResource
+    protected function getCollectionResource(Collection|LengthAwarePaginator $collection): JsonResource
     {
         $resource = $this->getResourceCollectionClass();
 

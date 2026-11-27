@@ -26,6 +26,11 @@ class SearchTraitController
         return $this->configName;
     }
 
+    protected function getIndexSortableColumns(): array
+    {
+        return ['name'];
+    }
+
     public function exposeBuildQuery(): Builder
     {
         return $this->buildQuery(request());

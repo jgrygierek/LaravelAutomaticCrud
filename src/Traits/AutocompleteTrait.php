@@ -29,6 +29,11 @@ trait AutocompleteTrait
     abstract protected function resolveResourceClass(string $suffix): ?string;
 
     /**
+     * @return array<int, string>
+     */
+    abstract protected function getIndexSortableColumns(): array;
+
+    /**
      * @return list<string>
      */
     abstract protected function getAutocompleteColumns(): array;
@@ -56,6 +61,14 @@ trait AutocompleteTrait
     {
         return $this->resolvedResourceAutocompleteClass ??= $this->resolveResourceClass('AutocompleteResource')
             ?? AutocompleteResource::class;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function getAutocompleteSortableColumns(): array
+    {
+        return $this->getIndexSortableColumns();
     }
 
     protected function getAutocompleteLabelColumn(): string

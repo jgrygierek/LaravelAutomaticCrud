@@ -344,7 +344,30 @@ final class AutocompleteTest extends CrudTestCase
 
         $this->sendRequest(['q' => 'lap', 'sort_by' => 'name', 'sort_direction' => 'desc'])->assertOk();
 
-        $this->assertStringEndsWith('order by "name" desc limit 10', DB::getQueryLog()[0]['query']);
+        $this->assertStringEndsWith('order by "name" desc limit 10', array_last(DB::getQueryLog())['query']);
+    }
+
+    #[Test]
+    public function autocomplete_sortable_columns_override_takes_precedence_over_index_sortable_columns(): void
+    {
+        $this->bindController(new class extends AutocompleteItemController
+        {
+            protected function getIndexSortableColumns(): array
+            {
+                return ['id'];
+            }
+
+            protected function getAutocompleteSortableColumns(): array
+            {
+                return ['name'];
+            }
+        });
+        Item::factory()->create(['name' => 'Laptop A']);
+        Item::factory()->create(['name' => 'Laptop B']);
+
+        $this->sendRequest(['q' => 'lap', 'sort_by' => 'name', 'sort_direction' => 'desc'])
+            ->assertOk()
+            ->assertJsonPath('data.0.label', 'Laptop B');
     }
 
     #[Test]
@@ -570,6 +593,22 @@ final class AutocompleteTest extends CrudTestCase
         });
 
         $this->sendRequest(['q' => 'lap']);
+    }
+
+    #[Test]
+    public function returns_422_when_sorting_by_column_outside_index_sortable_columns(): void
+    {
+        $this->bindController(new class extends AutocompleteItemController
+        {
+            protected function getIndexSortableColumns(): array
+            {
+                return ['id'];
+            }
+        });
+
+        $this->sendRequest(['q' => 'lap', 'sort_by' => 'name'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('sort_by');
     }
 
     #[Test]
