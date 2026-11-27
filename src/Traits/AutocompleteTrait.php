@@ -43,7 +43,7 @@ trait AutocompleteTrait
         }
 
         return $this->makeAutocompleteCollection(
-            $this->applyAutocompleteSearch($this->buildQuery($request), $term)
+            $this->applyAutocompleteOrder($this->applyAutocompleteSearch($this->buildQuery($request), $term))
                 ->limit($this->getAutocompleteLimit())
                 ->get(),
         );
@@ -105,6 +105,21 @@ trait AutocompleteTrait
                 );
             }
         });
+    }
+
+    protected function applyAutocompleteOrder(Builder $query): Builder
+    {
+        if (QueryHelper::isSorted($query)) {
+            return $query;
+        }
+
+        if ($this->getAutocompleteColumns() !== []) {
+            $query->orderBy($query->qualifyColumn($this->getAutocompleteLabelColumn()));
+        }
+
+        $keyName = $query->getModel()->getKeyName();
+
+        return $keyName === null ? $query : $query->orderBy($query->qualifyColumn($keyName));
     }
 
     private function makeAutocompleteCollection(Collection $models): JsonResource

@@ -66,6 +66,10 @@ trait RequestTrait
         );
 
         if (class_exists($class)) {
+            if (!is_a($class, FormRequest::class, true)) {
+                throw new RuntimeException("Request class [$class] must extend FormRequest.");
+            }
+
             return $class;
         }
 
