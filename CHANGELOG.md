@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0
+
+### Changed
+
+- Requires Laravel 12.71+ or 13.40+, excluding framework versions with known security advisories.
+
 ## 1.6.0
 
 ### Added
