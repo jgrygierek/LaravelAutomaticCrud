@@ -99,6 +99,35 @@ final class RequestTraitTest extends TestCase
     }
 
     #[Test]
+    public function throws_exception_when_request_class_does_not_extend_form_request(): void
+    {
+        $controller = new class
+        {
+            use ConfigTrait, RequestTrait;
+
+            public function getModelClass(): string
+            {
+                return Item::class;
+            }
+
+            protected function getRequestNamespace(): string
+            {
+                return 'JG\LaravelAutomaticCrud\Tests\Support\Requests\NotFormRequest';
+            }
+
+            public function exposeGetRequestClass(string $action): ?string
+            {
+                return $this->getRequestClass($action);
+            }
+        };
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Request class [JG\LaravelAutomaticCrud\Tests\Support\Requests\NotFormRequest\Items\StoreItemRequest] must extend FormRequest.');
+
+        $controller->exposeGetRequestClass('Store');
+    }
+
+    #[Test]
     public function throws_exception_when_only_validated_is_enabled_and_request_is_not_form_request(): void
     {
         config()->set('automatic-crud.configs.default.requests.only_validated', true);

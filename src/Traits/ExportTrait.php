@@ -67,7 +67,7 @@ trait ExportTrait
 
     protected function getExportChunkSize(): int
     {
-        return (int) $this->getConfig('export.chunk_size');
+        return max(1, (int) $this->getConfig('export.chunk_size'));
     }
 
     /**

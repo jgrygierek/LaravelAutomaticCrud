@@ -10,6 +10,7 @@ use Illuminate\Testing\TestResponse;
 use JG\LaravelAutomaticCrud\Tests\Feature\CrudTestCase;
 use JG\LaravelAutomaticCrud\Tests\Support\Controllers\AutocompleteItemController;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
+use JG\LaravelAutomaticCrud\Tests\Support\Models\KeylessItem;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\SearchableItem;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -42,8 +43,8 @@ final class AutocompleteTest extends CrudTestCase
         $this->sendRequest(['q' => 'lapt'])
             ->assertOk()
             ->assertExactJson(['data' => [
-                ['id' => 1, 'label' => 'Laptop'],
                 ['id' => 2, 'label' => 'Desk'],
+                ['id' => 1, 'label' => 'Laptop'],
             ]]);
     }
 
@@ -314,6 +315,72 @@ final class AutocompleteTest extends CrudTestCase
             ->assertOk()
             ->assertJsonPath('data.0.label', 'Laptop B')
             ->assertJsonPath('data.1.label', 'Laptop A');
+    }
+
+    #[Test]
+    public function orders_by_label_column_then_primary_key_by_default(): void
+    {
+        Item::factory()->create(['name' => 'Laptop stand']);
+        Item::factory()->create(['name' => 'Laptop']);
+        Item::factory()->create(['name' => 'Laptop']);
+        DB::enableQueryLog();
+
+        $this->sendRequest(['q' => 'lap'])
+            ->assertOk()
+            ->assertExactJson(['data' => [
+                ['id' => 2, 'label' => 'Laptop'],
+                ['id' => 3, 'label' => 'Laptop'],
+                ['id' => 1, 'label' => 'Laptop stand'],
+            ]]);
+
+        $this->assertStringEndsWith('order by "items"."name" asc, "items"."id" asc limit 10', DB::getQueryLog()[0]['query']);
+    }
+
+    #[Test]
+    public function skips_default_order_when_sorting_is_requested(): void
+    {
+        Item::factory()->create(['name' => 'Laptop']);
+        DB::enableQueryLog();
+
+        $this->sendRequest(['q' => 'lap', 'sort_by' => 'name', 'sort_direction' => 'desc'])->assertOk();
+
+        $this->assertStringEndsWith('order by "name" desc limit 10', DB::getQueryLog()[0]['query']);
+    }
+
+    #[Test]
+    public function orders_by_label_column_only_for_model_without_primary_key(): void
+    {
+        $this->bindController(new class extends AutocompleteItemController
+        {
+            protected function getModelClass(): string
+            {
+                return KeylessItem::class;
+            }
+        });
+        Item::factory()->create(['name' => 'Laptop']);
+        DB::enableQueryLog();
+
+        $this->sendRequest(['q' => 'lap'])->assertOk();
+
+        $this->assertStringEndsWith('order by "items"."name" asc limit 10', DB::getQueryLog()[0]['query']);
+    }
+
+    #[Test]
+    public function orders_by_primary_key_only_when_no_columns_are_configured(): void
+    {
+        $this->bindController(new class extends AutocompleteItemController
+        {
+            protected function getAutocompleteColumns(): array
+            {
+                return [];
+            }
+        });
+        Item::factory()->create(['name' => 'Laptop']);
+        DB::enableQueryLog();
+
+        $this->sendRequest(['q' => 'lap'])->assertOk();
+
+        $this->assertStringEndsWith('order by "items"."id" asc limit 10', DB::getQueryLog()[0]['query']);
     }
 
     #[Test]

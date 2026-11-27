@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.0
 
 ### Added
 
@@ -9,6 +9,14 @@
 ### Changed
 
 - `getResourceExportClass()` moved from `ResourceTrait` to `ExportTrait`.
+- `getCollectionResource()` is `protected` instead of `private`, so it can be overridden.
+- `getModelClass()` memoizes the resolved model class per controller instance.
+- Missing config keys fall back to the package's bundled config file instead of a separate hardcoded list.
+
+### Fixed
+
+- A convention request class that doesn't extend `FormRequest` throws a `RuntimeException` instead of resolving to an empty request.
+- `export.chunk_size` below `1` is raised to `1` instead of failing the export.
 
 ## 1.5.0
 

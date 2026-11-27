@@ -21,6 +21,7 @@ use JG\LaravelAutomaticCrud\Tests\Support\Enums\ItemStatus;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\KeylessItem;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 
 final class ExportTest extends CrudTestCase
 {
@@ -315,6 +316,21 @@ final class ExportTest extends CrudTestCase
         $this->assertCount(3, $queries);
         $this->assertStringEndsWith('limit 2', $queries[2]);
         $this->assertSame([4], DB::getQueryLog()[2]['bindings']);
+    }
+
+    #[Test]
+    #[TestWith([0])]
+    #[TestWith([-1])]
+    public function fetches_in_chunks_of_one_when_configured_chunk_size_is_lower(int $chunkSize): void
+    {
+        config(['automatic-crud.configs.default.export.chunk_size' => $chunkSize]);
+        $this->createItems(2);
+        DB::enableQueryLog();
+
+        $content = $this->sendRequest()->assertOk()->streamedContent();
+
+        $this->assertSame("id,name\r\n1,\"Item 1\"\r\n2,\"Item 2\"\r\n", $content);
+        $this->assertStringEndsWith('limit 1', DB::getQueryLog()[0]['query']);
     }
 
     #[Test]
