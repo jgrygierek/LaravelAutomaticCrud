@@ -6,6 +6,7 @@ namespace JG\LaravelAutomaticCrud\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use JG\LaravelAutomaticCrud\Tests\Support\Filters\IdFilter;
 use JG\LaravelAutomaticCrud\Tests\Support\Filters\NameFilter;
 use JG\LaravelAutomaticCrud\Tests\Support\Models\Item;
@@ -91,6 +92,28 @@ final class SearchTraitTest extends TestCase
         yield 'ascending by default' => [['sort_by' => 'name'], 'asc'];
         yield 'ascending explicitly' => [['sort_by' => 'name', 'sort_direction' => 'asc'], 'asc'];
         yield 'descending explicitly' => [['sort_by' => 'name', 'sort_direction' => 'desc'], 'desc'];
+        yield 'descending case-insensitively' => [['sort_by' => 'name', 'sort_direction' => 'DESC'], 'desc'];
+        yield 'ascending when direction is empty' => [['sort_by' => 'name', 'sort_direction' => ''], 'asc'];
+    }
+
+    #[Test]
+    public function reads_default_sortable_columns_from_schema_only_once(): void
+    {
+        $controller = new class(Item::class) extends SearchTraitController
+        {
+            public function exposeDefaultSortableColumns(): array
+            {
+                return $this->defaultSortableColumns();
+            }
+        };
+        DB::enableQueryLog();
+
+        $controller->exposeDefaultSortableColumns();
+        $schemaQueries = count(DB::getQueryLog());
+        $controller->exposeDefaultSortableColumns();
+
+        $this->assertGreaterThan(0, $schemaQueries);
+        $this->assertCount($schemaQueries, DB::getQueryLog());
     }
 
     #[Test]

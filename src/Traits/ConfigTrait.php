@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JG\LaravelAutomaticCrud\Traits;
 
+use Illuminate\Support\Arr;
+
 trait ConfigTrait
 {
     protected function getConfigName(): string
@@ -27,20 +29,6 @@ trait ConfigTrait
             }
         }
 
-        return match ($key) {
-            'requests.force_custom', 'requests.only_validated' => false,
-            'namespaces.request' => 'App\Http\Requests',
-            'namespaces.model' => 'App\Models',
-            'namespaces.resource' => 'App\Http\Resources',
-            'namespaces.event' => 'App\Events',
-            'pagination.paginate', 'pagination.allow_pagination_override', 'pagination.allow_per_page_override' => true,
-            'pagination.per_page' => 10,
-            'pagination.max_per_page' => 100,
-            'export.chunk_size' => 5000,
-            'autocomplete.limit' => 10,
-            'autocomplete.min_length' => 3,
-            'autocomplete.term_parameter' => 'q',
-            default => null,
-        };
+        return Arr::get((require __DIR__ . '/../../config/automatic-crud.php')['configs']['default'], $key);
     }
 }

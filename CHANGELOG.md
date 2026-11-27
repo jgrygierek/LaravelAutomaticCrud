@@ -9,9 +9,14 @@
 ### Changed
 
 - `getResourceExportClass()` moved from `ResourceTrait` to `ExportTrait`.
+- `?sort_by` accepts only sortable columns — by default the table's columns limited to `$visible` and without `$hidden` ones — and `?sort_direction` only `asc` or `desc`; other values return `422` instead of being ignored. Override `get{Action}SortableColumns()` to change the columns.
 - `getCollectionResource()` is `protected` instead of `private`, so it can be overridden.
 - `getModelClass()` memoizes the resolved model class per controller instance.
 - Missing config keys fall back to the package's bundled config file instead of a separate hardcoded list.
+
+### Deprecated
+
+- `SortingRulesHelper`, to be removed in 2.0.0; the controller validates the sorting parameters.
 
 ### Fixed
 

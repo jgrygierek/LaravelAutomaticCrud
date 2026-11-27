@@ -37,6 +37,11 @@ trait ExportTrait
 
     abstract protected function resolveResourceClass(string $suffix): ?string;
 
+    /**
+     * @return array<int, string>
+     */
+    abstract protected function getIndexSortableColumns(): array;
+
     public function export(): StreamedResponse
     {
         $this->getResourceExportClass();
@@ -58,6 +63,14 @@ trait ExportTrait
     {
         return $this->resolvedResourceExportClass ??= $this->resolveResourceClass('ExportResource')
             ?? throw new RuntimeException(sprintf('Export resource class [%s] not found.', $this->getResourceClassByConvention('ExportResource')));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function getExportSortableColumns(): array
+    {
+        return $this->getIndexSortableColumns();
     }
 
     protected function getExportFileName(): string
